@@ -459,7 +459,17 @@ function refreshConfBar(rows) {
   document.getElementById('cb-newdata').textContent=newDataRows.length;
 }
 
-const POWER_AUTOMATE_URL = 'https://defaultca37334264ee46d795e8cc81024e96.82.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/395746e8edd44a44adc6d48667154aa8/triggers/manual/paths/invoke?api-version=1';
+const SHAREPOINT_SITE = 'https://cimoryindonesia.sharepoint.com/sites/asset';
+async function getDigestToken() {
+  const res = await fetch(`${SHAREPOINT_SITE}/_api/contextinfo`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Accept': 'application/json;odata=verbose' }
+  });
+  const data = await res.json();
+  return data.d.GetContextWebInformation.FormDigestValue;
+}
+const SHAREPOINT_LIST = 'VerifikasiAsetHP';
 
 async function doSave() {
   const hoa=document.getElementById('nm-hoa').value;
@@ -493,14 +503,71 @@ async function doSave() {
   btn.disabled=true; btn.textContent='⏳ Menyimpan...';
 
   try {
-    const res = await fetch(POWER_AUTOMATE_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    // no-cors: response type akan 'opaque', anggap sukses jika tidak throw error
-    toast(`✅ Data ${curArea} berhasil disimpan ke SharePoint!`);
+    // Kirim setiap baris aset ke SharePoint List
+    const listUrl = `${SHAREPOINT_SITE}/_api/web/lists/getbytitle('${SHAREPOINT_LIST}')/items`;
+    const token = await getDigestToken();
+    
+    const allItems = [
+      ...payload.aset_terdaftar.map(d => ({
+        Title: d.no_inventaris,
+        AREA: payload.area,
+        NAMA_HOA: payload.hoa,
+        TANGGAL: payload.tanggal,
+        NO_INVENTARIS: d.no_inventaris,
+        IMEI: d.imei,
+        SIM_CARD: d.sim_card,
+        SLSNO: d.slsno,
+        STATUS: d.status,
+        CATATAN: d.note,
+        TIPE: 'TERDAFTAR',
+        TIMESTAMP: payload.timestamp
+      })),
+      ...payload.new_data.map(d => ({
+        Title: d.no_inv||'NEW',
+        AREA: payload.area,
+        NAMA_HOA: payload.hoa,
+        TANGGAL: payload.tanggal,
+        NO_INVENTARIS: d.no_inv,
+        IMEI: '',
+        SIM_CARD: d.sim,
+        SLSNO: d.slsno,
+        STATUS: 'NEW DATA',
+        CATATAN: d.note,
+        TIPE: 'NEW DATA',
+        TIMESTAMP: payload.timestamp
+      })),
+      ...payload.aset_tambahan.map(d => ({
+        Title: d.no_inv||'TAMBAHAN',
+        AREA: payload.area,
+        NAMA_HOA: payload.hoa,
+        TANGGAL: payload.tanggal,
+        NO_INVENTARIS: d.no_inv,
+        IMEI: d.imei,
+        SIM_CARD: d.sim,
+        SLSNO: d.slsno,
+        STATUS: 'TAMBAHAN',
+        CATATAN: d.note,
+        TIPE: 'ASET TAMBAHAN',
+        TIMESTAMP: payload.timestamp
+      }))
+    ];
+
+    let successCount = 0;
+    for (const item of allItems) {
+      const res = await fetch(listUrl, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json;odata=verbose',
+          'Content-Type': 'application/json;odata=verbose',
+          'X-RequestDigest': token,
+          'X-HTTP-Method': 'POST'
+        },
+        body: JSON.stringify({ __metadata: { type: `SP.Data.VerifikasiAsetHPListItem` }, ...item })
+      });
+      if (res.ok) successCount++;
+    }
+    toast(`✅ ${successCount} data ${curArea} berhasil disimpan ke SharePoint!`);
   } catch(e) {
     toast('Gagal simpan: ' + e.message, 'err');
   } finally {
