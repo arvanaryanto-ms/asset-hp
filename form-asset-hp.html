@@ -8,14 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.7.1/lib/msal-browser.min.js"></script>
 <style>
-:root {
-  --bg:#f0f2f5;--white:#fff;--surface:#f8f9fa;--border:#e2e8f0;--border-dark:#cbd5e1;
-  --accent:#0ea5e9;--accent-dark:#0284c7;--success:#16a34a;--success-bg:#dcfce7;
-  --success-border:#86efac;--danger:#dc2626;--danger-bg:#fee2e2;--danger-border:#fca5a5;
-  --warning:#d97706;--warning-bg:#fef3c7;--purple:#7c3aed;--purple-bg:#ede9fe;
-  --purple-border:#c4b5fd;--text:#1e293b;--text-mid:#475569;--text-muted:#94a3b8;
-  --radius:8px;--shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
-}
+:root{--bg:#f0f2f5;--white:#fff;--surface:#f8f9fa;--border:#e2e8f0;--border-dark:#cbd5e1;--accent:#0ea5e9;--accent-dark:#0284c7;--success:#16a34a;--success-bg:#dcfce7;--success-border:#86efac;--danger:#dc2626;--danger-bg:#fee2e2;--danger-border:#fca5a5;--warning:#d97706;--warning-bg:#fef3c7;--purple:#7c3aed;--purple-bg:#ede9fe;--purple-border:#c4b5fd;--text:#1e293b;--text-mid:#475569;--text-muted:#94a3b8;--radius:8px;--shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:130px;}
 
@@ -29,12 +22,40 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .btn-ms-login:hover{background:#162d4a;box-shadow:0 4px 16px rgba(30,58,95,0.3);transform:translateY(-1px);}
 .login-note{font-size:11px;color:var(--text-muted);margin-top:16px;}
 
+/* ADMIN CHOICE */
+.admin-choice{position:fixed;inset:0;background:#f0f2f5;display:none;align-items:center;justify-content:center;z-index:998;}
+.admin-choice.show{display:flex;}
+.choice-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:40px;text-align:center;max-width:440px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.08);}
+.choice-card h2{font-size:20px;font-weight:800;color:#1e3a5f;margin-bottom:8px;}
+.choice-card p{font-size:13px;color:var(--text-muted);margin-bottom:28px;}
+.choice-btns{display:flex;flex-direction:column;gap:12px;}
+.btn-choice{width:100%;height:52px;border-radius:10px;border:none;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;}
+.btn-choice-dashboard{background:#1e3a5f;color:#fff;}
+.btn-choice-dashboard:hover{background:#162d4a;transform:translateY(-1px);}
+.btn-choice-form{background:var(--accent);color:#fff;}
+.btn-choice-form:hover{background:var(--accent-dark);transform:translateY(-1px);}
+
 /* LOADING */
 .loading-overlay{position:fixed;inset:0;background:rgba(240,242,245,0.9);display:none;align-items:center;justify-content:center;z-index:500;flex-direction:column;gap:14px;}
 .loading-overlay.show{display:flex;}
 .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{font-size:14px;color:var(--text-mid);font-weight:500;}
+
+/* SUKSES SCREEN */
+.sukses-screen{position:fixed;inset:0;background:#f0f2f5;display:none;align-items:center;justify-content:center;z-index:400;flex-direction:column;}
+.sukses-screen.show{display:flex;}
+.sukses-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:48px 40px;text-align:center;max-width:480px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.08);}
+.sukses-icon{font-size:64px;margin-bottom:16px;}
+.sukses-card h2{font-size:22px;font-weight:800;color:var(--success);margin-bottom:8px;}
+.sukses-card p{font-size:14px;color:var(--text-muted);margin-bottom:20px;line-height:1.6;}
+.sukses-summary{background:var(--success-bg);border:1px solid var(--success-border);border-radius:10px;padding:16px 20px;margin-bottom:24px;text-align:left;}
+.sukses-summary-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:13px;}
+.sukses-summary-label{color:var(--text-muted);font-weight:500;}
+.sukses-summary-val{font-weight:700;color:var(--text);}
+.sukses-locked{background:var(--warning-bg);border:1px solid #fde68a;border-radius:8px;padding:12px 16px;font-size:12px;color:#92400e;margin-bottom:20px;}
+.btn-sukses-excel{width:100%;height:44px;background:#166534;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-sukses-excel:hover{background:#15803d;}
 
 /* HEADER */
 .header{background:#1e3a5f;padding:0 28px;display:flex;align-items:center;gap:14px;height:60px;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,0.2);}
@@ -47,6 +68,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .user-name{font-size:12px;color:rgba(255,255,255,0.8);font-weight:500;}
 .btn-logout{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;}
 .btn-logout:hover{background:rgba(255,255,255,0.2);}
+.badge-admin-hdr{background:#f59e0b;color:#fff;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
 
 .page{max-width:1400px;margin:0 auto;padding:20px;display:none;}
 .page.show{display:block;}
@@ -56,7 +78,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .card-head h2{font-size:13px;font-weight:700;}
 .badge-cnt{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;display:none;}
 .badge-blue{background:var(--accent);color:#fff;}
-.badge-purple{background:var(--purple);color:#fff;}
 .card-body{padding:16px 20px;}
 
 .form-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
@@ -76,8 +97,6 @@ select.form-control{appearance:none;-webkit-appearance:none;cursor:pointer;backg
 .btn-green-soft:hover{background:#bbf7d0;}
 .btn-red-soft{background:var(--danger-bg);color:var(--danger);border:1.5px solid var(--danger-border);}
 .btn-red-soft:hover{background:#fecaca;}
-.btn-purple{background:var(--purple-bg);color:var(--purple);border:1.5px solid var(--purple-border);}
-.btn-purple:hover{background:#ddd6fe;}
 
 .stats-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
 .stat-box{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px 18px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);}
@@ -122,22 +141,26 @@ tr.hl-tidak{background:#fff5f5 !important;}
 .btn-del-row{width:32px;height:32px;border-radius:6px;border:none;background:var(--danger-bg);color:var(--danger);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.15s;flex-shrink:0;}
 .btn-del-row:hover{background:#fecaca;}
 
-.card-purple .card-head{background:#faf5ff;border-bottom-color:var(--purple-border);}
-.tambahan-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr auto;gap:8px;align-items:center;background:#faf5ff;border:1px dashed var(--purple-border);border-radius:8px;padding:10px 14px;margin-bottom:8px;animation:fadeIn 0.2s ease;}
-.tambahan-row input{height:32px;padding:0 10px;border-radius:6px;border:1.5px solid var(--purple-border);font-family:inherit;font-size:12px;color:var(--text);background:#fff;}
-.tambahan-row input:focus{outline:none;border-color:var(--purple);}
-.tambahan-row input::placeholder{color:var(--text-muted);}
-.tambahan-header{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr auto;gap:8px;padding:0 14px;margin-bottom:6px;}
-.tambahan-header span{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--purple);}
-.empty-tambahan{padding:20px;text-align:center;color:var(--text-muted);font-size:13px;}
 .empty{padding:60px 20px;text-align:center;color:var(--text-muted);}
 .empty .ei{font-size:48px;margin-bottom:10px;}
 .empty p{font-size:14px;}
 
 .user-strip{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 20px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-bottom:16px;box-shadow:var(--shadow);}
 .user-strip .ul{font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:3px;}
-.user-input{border:none;border-bottom:1.5px solid #fcd34d;background:transparent;font-family:inherit;font-size:13px;font-weight:600;color:var(--text);padding:2px 4px;min-width:140px;}
-.user-input:focus{outline:none;border-color:#f59e0b;}
+.user-strip-val{font-size:14px;font-weight:700;color:var(--text);padding:2px 4px;}
+
+/* REVISI WARNING */
+.revisi-banner{background:#fffbeb;border:2px solid #f59e0b;border-radius:10px;padding:16px 20px;margin-bottom:16px;display:none;}
+.revisi-banner.show{display:flex;align-items:center;gap:14px;}
+.revisi-banner-icon{font-size:28px;flex-shrink:0;}
+.revisi-banner h3{font-size:14px;font-weight:700;color:#92400e;margin-bottom:4px;}
+.revisi-banner p{font-size:13px;color:#78350f;}
+.btn-revisi{height:36px;padding:0 16px;background:#f59e0b;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;margin-left:auto;}
+.btn-revisi:hover{background:#d97706;}
+
+/* LOCKED BANNER */
+.locked-banner{background:var(--danger-bg);border:2px solid var(--danger-border);border-radius:10px;padding:16px 20px;margin-bottom:16px;display:none;align-items:center;gap:14px;}
+.locked-banner.show{display:flex;}
 
 .confirm-bar{position:fixed;bottom:0;left:0;right:0;z-index:300;background:#1e3a5f;border-top:3px solid var(--accent);padding:12px 28px;display:none;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 -4px 20px rgba(0,0,0,0.18);}
 .confirm-bar.show{display:flex;}
@@ -146,7 +169,7 @@ tr.hl-tidak{background:#fff5f5 !important;}
 .cb-chip{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:6px 14px;display:flex;flex-direction:column;align-items:center;gap:1px;}
 .cb-chip .cl{font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;}
 .cb-chip .cv{font-size:16px;font-weight:800;color:#fff;}
-.cv-green{color:#4ade80 !important;}.cv-red{color:#f87171 !important;}.cv-orange{color:#fbbf24 !important;}.cv-purple{color:#c4b5fd !important;}
+.cv-green{color:#4ade80 !important;}.cv-red{color:#f87171 !important;}.cv-orange{color:#fbbf24 !important;}
 .cb-actions{display:flex;gap:8px;align-items:center;}
 .btn-excel{height:36px;padding:0 14px;background:#166534;color:#fff;border:1px solid #15803d;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
 .btn-excel:hover{background:#15803d;}
@@ -162,7 +185,7 @@ tr.hl-tidak{background:#fff5f5 !important;}
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
+<!-- LOGIN -->
 <div class="login-screen" id="login-screen">
   <div class="login-card">
     <div class="login-logo">📱</div>
@@ -176,10 +199,35 @@ tr.hl-tidak{background:#fff5f5 !important;}
   </div>
 </div>
 
+<!-- ADMIN CHOICE -->
+<div class="admin-choice" id="admin-choice">
+  <div class="choice-card">
+    <div style="font-size:48px;margin-bottom:16px">👑</div>
+    <h2>Selamat datang, Admin!</h2>
+    <p>Anda login sebagai administrator. Pilih mode yang ingin digunakan.</p>
+    <div class="choice-btns">
+      <button class="btn-choice btn-choice-dashboard" onclick="goDashboard()">📊 Buka Dashboard Admin</button>
+      <button class="btn-choice btn-choice-form" onclick="goForm()">📝 Input Form Verifikasi</button>
+    </div>
+  </div>
+</div>
+
 <!-- LOADING -->
 <div class="loading-overlay" id="loading-overlay">
   <div class="spinner"></div>
   <div class="loading-text" id="loading-text">Memuat...</div>
+</div>
+
+<!-- SUKSES SCREEN -->
+<div class="sukses-screen" id="sukses-screen">
+  <div class="sukses-card">
+    <div class="sukses-icon">✅</div>
+    <h2>Data Berhasil Disimpan!</h2>
+    <p>Data verifikasi aset HP sudah tersimpan ke SharePoint.</p>
+    <div class="sukses-summary" id="sukses-summary"></div>
+    <div class="sukses-locked">🔒 Form telah dikunci. Anda tidak dapat mengubah data ini kecuali melakukan revisi. Revisi hanya bisa dilakukan 1 kali.</div>
+    <button class="btn-sukses-excel" onclick="exportExcel()">📊 Download Rekap Excel</button>
+  </div>
 </div>
 
 <!-- HEADER -->
@@ -191,6 +239,7 @@ tr.hl-tidak{background:#fff5f5 !important;}
   </div>
   <div class="header-date" id="hdr-date"></div>
   <div class="header-user" id="header-user" style="display:none">
+    <span class="badge-admin-hdr" id="admin-badge" style="display:none">👑 ADMIN</span>
     <div class="user-avatar" id="user-avatar">?</div>
     <div class="user-name" id="user-name-display"></div>
     <button class="btn-logout" onclick="doLogout()">Logout</button>
@@ -198,14 +247,38 @@ tr.hl-tidak{background:#fff5f5 !important;}
 </div>
 
 <div class="page" id="main-page">
+
+  <!-- REVISI BANNER -->
+  <div class="revisi-banner" id="revisi-banner">
+    <div class="revisi-banner-icon">⚠️</div>
+    <div>
+      <h3>Data Sudah Disubmit</h3>
+      <p id="revisi-info">Anda sudah pernah submit verifikasi area ini. Apakah ingin melakukan revisi? Revisi hanya bisa dilakukan 1 kali.</p>
+    </div>
+    <button class="btn-revisi" onclick="doRevisi()">✏️ Revisi Data</button>
+  </div>
+
+  <!-- LOCKED BANNER -->
+  <div class="locked-banner" id="locked-banner">
+    <div style="font-size:24px">🔒</div>
+    <div>
+      <div style="font-size:14px;font-weight:700;color:var(--danger)">Form Terkunci</div>
+      <div style="font-size:13px;color:#7f1d1d" id="locked-info">Data sudah direvisi dan tidak dapat diubah lagi.</div>
+    </div>
+  </div>
+
   <div class="user-strip">
     <div>
       <span class="ul">Nama HOA</span>
-      <input class="user-input" id="nm-hoa" type="text" placeholder="Tulis nama HOA...">
+      <span class="user-strip-val" id="nm-hoa-display">—</span>
+    </div>
+    <div>
+      <span class="ul">Email</span>
+      <span class="user-strip-val" id="nm-email-display">—</span>
     </div>
     <div>
       <span class="ul">Tanggal Pengecekan</span>
-      <input class="user-input" id="nm-tanggal" type="date">
+      <input class="user-input" id="nm-tanggal" type="date" style="border:none;border-bottom:1.5px solid #fcd34d;background:transparent;font-family:inherit;font-size:13px;font-weight:600;color:var(--text);padding:2px 4px;">
     </div>
   </div>
 
@@ -240,7 +313,7 @@ tr.hl-tidak{background:#fff5f5 !important;}
         <div class="form-group"><label>Branch</label><input class="form-control" id="f-branch" readonly placeholder="Otomatis"></div>
         <div class="form-group" style="flex-direction:row;gap:8px">
           <button class="btn btn-blue" onclick="applyFilter()">▶ Tampilkan Data</button>
-          <button class="btn btn-outline" onclick="resetAll()">↩ Reset</button>
+          <button class="btn btn-outline" onclick="resetFilter()">↩ Reset</button>
         </div>
       </div>
     </div>
@@ -248,11 +321,10 @@ tr.hl-tidak{background:#fff5f5 !important;}
 
   <div id="stats-area" style="display:none">
     <div class="stats-row">
-      <div class="stat-box"><div class="stat-icon">📋</div><div><div class="stat-label">Total Aset Terdaftar</div><div class="stat-val v-blue" id="s-total">0</div></div></div>
+      <div class="stat-box"><div class="stat-icon">📋</div><div><div class="stat-label">Total Aset</div><div class="stat-val v-blue" id="s-total">0</div></div></div>
       <div class="stat-box"><div class="stat-icon">✅</div><div><div class="stat-label">Ada</div><div class="stat-val v-green" id="s-ada">0</div></div></div>
       <div class="stat-box"><div class="stat-icon">❌</div><div><div class="stat-label">Tidak Ada</div><div class="stat-val v-red" id="s-tidak">0</div></div></div>
       <div class="stat-box"><div class="stat-icon">⏳</div><div><div class="stat-label">Belum Dicek</div><div class="stat-val v-orange" id="s-belum">0</div></div></div>
-      <div class="stat-box"><div class="stat-icon">➕</div><div><div class="stat-label">Aset Tambahan</div><div class="stat-val v-purple" id="s-tambahan">0</div></div></div>
     </div>
     <div class="prog-wrap"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
   </div>
@@ -282,18 +354,6 @@ tr.hl-tidak{background:#fff5f5 !important;}
     </div>
   </div>
 
-  <div class="card card-purple" id="card-tambahan" style="display:none">
-    <div class="card-head">
-      <span>➕</span><h2>Aset Tambahan</h2>
-      <span class="badge-cnt badge-purple" id="cnt-tambahan">0 item</span>
-      <span style="font-size:11px;color:var(--purple);margin-left:4px;font-style:italic">— tidak masuk total aset terdaftar</span>
-      <div style="margin-left:auto"><button class="btn btn-purple" onclick="addTambahanRow()">+ Tambah Aset</button></div>
-    </div>
-    <div class="card-body" style="padding:12px 20px">
-      <div class="tambahan-header"><span>No. Inventaris</span><span>IMEI</span><span>SIM Card</span><span>SLS No.</span><span>Nama Salesman</span><span>Catatan</span><span></span></div>
-      <div id="tambahan-rows"><div class="empty-tambahan">Belum ada aset tambahan. Klik <strong>+ Tambah Aset</strong>.</div></div>
-    </div>
-  </div>
 </div>
 
 <div class="confirm-bar" id="confirm-bar">
@@ -305,12 +365,11 @@ tr.hl-tidak{background:#fff5f5 !important;}
     <div class="cb-chip"><span class="cl">Ada ✓</span><span class="cv cv-green" id="cb-ada">0</span></div>
     <div class="cb-chip"><span class="cl">Tidak Ada ✗</span><span class="cv cv-red" id="cb-tidak">0</span></div>
     <div class="cb-chip"><span class="cl">Belum Dicek</span><span class="cv cv-orange" id="cb-belum">0</span></div>
-    <div class="cb-chip"><span class="cl">Tambahan</span><span class="cv cv-purple" id="cb-tambahan">0</span></div>
     <div class="cb-chip"><span class="cl">New Data</span><span class="cv cv-red" id="cb-newdata">0</span></div>
   </div>
   <div class="cb-actions">
     <button class="btn-excel" onclick="exportExcel()">📊 Export Excel</button>
-    <button class="btn-save" id="btn-save" onclick="doSave()">💾 Simpan ke SharePoint</button>
+    <button class="btn-save" id="btn-save" onclick="doSave()">💾 Simpan</button>
   </div>
 </div>
 
@@ -320,18 +379,27 @@ tr.hl-tidak{background:#fff5f5 !important;}
 // ============================================================
 // KONFIGURASI
 // ============================================================
-const CLIENT_ID  = '7d2d5c72-02c0-48ed-a1d2-26a3113f8efb';
-const TENANT_ID  = 'ca373342-64ee-46d7-95e8-cc81024e9682';
-const SP_SITE    = 'https://cimoryindonesia.sharepoint.com/sites/asset';
-const SP_LIST    = 'VerifikasiAsetHP';
-const SCOPES     = ['https://cimoryindonesia.sharepoint.com/AllSites.Write'];
+const CLIENT_ID   = '7d2d5c72-02c0-48ed-a1d2-26a3113f8efb';
+const TENANT_ID   = 'ca373342-64ee-46d7-95e8-cc81024e9682';
+const SP_SITE     = 'https://cimoryindonesia.sharepoint.com/sites/asset';
+const SP_LIST     = 'VerifikasiAsetHP';
+const SCOPES      = ['https://cimoryindonesia.sharepoint.com/AllSites.Write'];
+const ADMIN_EMAIL = 'arvan.aryanto@cimory.com';
+const DASHBOARD_URL = 'dashboard.html';
 // ============================================================
 
-let msalApp = null;
-let currentUser = null;
-let DB = [], vData = {}, curArea = '';
-let newDataRows = [], tambahanRows = [];
-let ndCounter = 0, tbCounter = 0;
+let msalApp = null, currentUser = null;
+let DB = [], vData = {}, curArea = '', curRegion = '', curEntity = '', curBranch = '';
+let newDataRows = [], ndCounter = 0;
+let submitStatus = null; // null | 'SUBMITTED' | 'REVISED'
+let isRevisiMode = false;
+let existingItemIds = []; // IDs of existing SP items for this area+email (for update)
+let formLocked = false;
+let savedRows = []; // untuk sukses screen
+
+function isAdmin() {
+  return currentUser?.username?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+}
 
 function initMsal() {
   if (msalApp) return;
@@ -351,19 +419,37 @@ async function doLogin() {
     await msalApp.initialize();
     const res = await msalApp.loginPopup({ scopes: SCOPES });
     currentUser = res.account;
-    afterLogin();
+    await afterLogin();
   } catch(e) {
     toast('Login gagal: ' + e.message, 'err');
   }
 }
 
-function afterLogin() {
+async function afterLogin() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('header-user').style.display = 'flex';
   const name = currentUser.name || currentUser.username;
+  const email = currentUser.username;
   document.getElementById('user-name-display').textContent = name;
   document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
-  document.getElementById('nm-hoa').value = name;
+  if (isAdmin()) {
+    document.getElementById('admin-badge').style.display = 'inline-block';
+    document.getElementById('admin-choice').classList.add('show');
+  } else {
+    goForm();
+  }
+}
+
+function goDashboard() {
+  document.getElementById('admin-choice').classList.remove('show');
+  window.location.href = DASHBOARD_URL;
+}
+
+function goForm() {
+  document.getElementById('admin-choice').classList.remove('show');
+  const name = currentUser.name || currentUser.username;
+  document.getElementById('nm-hoa-display').textContent = name;
+  document.getElementById('nm-email-display').textContent = currentUser.username;
   document.getElementById('main-page').classList.add('show');
 }
 
@@ -391,13 +477,12 @@ window.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('hdr-date').textContent =
     now.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   document.getElementById('nm-tanggal').value = now.toISOString().split('T')[0];
-  // Cek session yang masih aktif
   initMsal();
   await msalApp.initialize();
   const accounts = msalApp.getAllAccounts();
   if (accounts.length > 0) {
     currentUser = accounts[0];
-    afterLogin();
+    await afterLogin();
   }
 });
 
@@ -412,15 +497,14 @@ function loadMasterFile(input) {
       const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
       DB = rows.map((r,i) => ({
         id: i+1,
-        principle: r['PRINCIPLE']||'',
-        no_inv:    r['NO_INVENTARIS']||'',
-        imei:      r['IMEI']||'',
-        sim:       String(r['SIM_CARD']||''),
-        slsno:     r['SLSNO']||'',
-        region:    r['REGION']||'',
-        entity:    r['ENTITY']||'',
-        branch:    r['BRANCH']||'',
-        area:      String(r['AREA']||'').toUpperCase(),
+        no_inv: r['NO_INVENTARIS']||'',
+        imei:   r['IMEI']||'',
+        sim:    String(r['SIM_CARD']||''),
+        slsno:  r['SLSNO']||'',
+        region: r['REGION']||'',
+        entity: r['ENTITY']||'',
+        branch: r['BRANCH']||'',
+        area:   String(r['AREA']||'').toUpperCase(),
       })).filter(r=>r.area);
       const areas=[...new Set(DB.map(d=>d.area))].sort();
       const sel=document.getElementById('f-area');
@@ -435,30 +519,116 @@ function loadMasterFile(input) {
 }
 
 function onAreaChange() {
-  const area=document.getElementById('f-area').value;
-  const row=DB.find(d=>d.area===area);
-  document.getElementById('f-region').value=row?.region||'';
-  document.getElementById('f-entity').value=row?.entity||'';
-  document.getElementById('f-branch').value=row?.branch||'';
+  const area = document.getElementById('f-area').value;
+  const row = DB.find(d=>d.area===area);
+  document.getElementById('f-region').value = row?.region||'';
+  document.getElementById('f-entity').value = row?.entity||'';
+  document.getElementById('f-branch').value = row?.branch||'';
 }
 
-function applyFilter() {
-  const area=document.getElementById('f-area').value;
-  if(!area){toast('Pilih Kode Area terlebih dahulu!','err');return;}
-  if(!DB.length){toast('Load master data HP terlebih dahulu!','err');return;}
-  curArea=area;
-  const rows=DB.filter(d=>d.area===area);
-  rows.forEach(d=>{if(!vData[d.id])vData[d.id]={status:null,note:''};});
-  renderTable(rows); refreshStats(rows); refreshConfBar(rows);
+async function applyFilter() {
+  const area = document.getElementById('f-area').value;
+  if (!area){toast('Pilih Kode Area terlebih dahulu!','err');return;}
+  if (!DB.length){toast('Load master data HP terlebih dahulu!','err');return;}
+
+  curArea = area;
+  const row = DB.find(d=>d.area===area);
+  curRegion = row?.region||'';
+  curEntity = row?.entity||'';
+  curBranch = row?.branch||'';
+
+  // Cek submit status dari SharePoint (skip untuk admin)
+  if (!isAdmin()) {
+    showLoading('Memeriksa status submit...');
+    await checkSubmitStatus();
+    hideLoading();
+  }
+
+  const rows = DB.filter(d=>d.area===area);
+  rows.forEach(d=>{ if(!vData[d.id]) vData[d.id]={status:null,note:''}; });
+  renderTable(rows);
+  refreshStats(rows);
+  refreshConfBar(rows);
   document.getElementById('confirm-bar').classList.add('show');
   document.getElementById('new-data-section').style.display='block';
-  document.getElementById('card-tambahan').style.display='block';
 }
 
-function resetAll() {
+async function checkSubmitStatus() {
+  try {
+    const token = await getToken();
+    const email = currentUser.username;
+    const url = `${SP_SITE}/_api/web/lists/getbytitle('${SP_LIST}')/items?$filter=EMAIL_USER eq '${email}' and AREA eq '${curArea}'&$select=Id,SUBMIT_STATUS&$top=1`;
+    const res = await fetch(url, {
+      headers: { 'Accept': 'application/json;odata=verbose', 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    const items = data.d.results;
+    if (items.length > 0) {
+      submitStatus = items[0].SUBMIT_STATUS || 'SUBMITTED';
+      // Ambil semua item IDs untuk update nanti
+      const urlAll = `${SP_SITE}/_api/web/lists/getbytitle('${SP_LIST}')/items?$filter=EMAIL_USER eq '${email}' and AREA eq '${curArea}'&$select=Id&$top=500`;
+      const resAll = await fetch(urlAll, { headers: { 'Accept': 'application/json;odata=verbose', 'Authorization': `Bearer ${token}` } });
+      if (resAll.ok) {
+        const dataAll = await resAll.json();
+        existingItemIds = dataAll.d.results.map(i=>i.Id);
+      }
+    } else {
+      submitStatus = null;
+    }
+  } catch(e) { submitStatus = null; }
+
+  // Tampilkan banner sesuai status
+  document.getElementById('revisi-banner').classList.remove('show');
+  document.getElementById('locked-banner').classList.remove('show');
+  formLocked = false;
+  isRevisiMode = false;
+
+  if (submitStatus === 'REVISED') {
+    document.getElementById('locked-banner').classList.add('show');
+    document.getElementById('locked-info').textContent = `Data area ${curArea} sudah direvisi dan tidak dapat diubah lagi.`;
+    formLocked = true;
+    lockForm();
+  } else if (submitStatus === 'SUBMITTED') {
+    document.getElementById('revisi-banner').classList.add('show');
+    document.getElementById('revisi-info').textContent = `Anda sudah submit verifikasi area ${curArea}. Apakah ingin melakukan revisi? Revisi hanya bisa dilakukan 1 kali.`;
+    formLocked = true;
+    lockForm();
+  }
+}
+
+function doRevisi() {
+  if (!confirm(`Anda akan merevisi data area ${curArea}.\nRevisi hanya bisa dilakukan 1 kali dan tidak dapat dibatalkan.\n\nLanjutkan?`)) return;
+  isRevisiMode = true;
+  formLocked = false;
+  document.getElementById('revisi-banner').classList.remove('show');
+  unlockForm();
+  toast('✏️ Mode revisi aktif. Silakan ubah data dan klik Simpan.');
+}
+
+function lockForm() {
+  document.querySelectorAll('.s-btn').forEach(b=>b.disabled=true);
+  document.querySelectorAll('.note-ta').forEach(t=>t.disabled=true);
+  const btn = document.getElementById('btn-save');
+  if (btn) { btn.disabled=true; }
+  document.querySelectorAll('#new-data-rows input').forEach(i=>i.disabled=true);
+  document.querySelector('[onclick="addNewDataRow()"]')?.setAttribute('disabled','true');
+  document.querySelector('[onclick="bulkStatus(\'ada\')"]')?.setAttribute('disabled','true');
+  document.querySelector('[onclick="bulkStatus(\'tidak\')"]')?.setAttribute('disabled','true');
+}
+
+function unlockForm() {
+  document.querySelectorAll('.s-btn').forEach(b=>b.disabled=false);
+  document.querySelectorAll('.note-ta').forEach(t=>t.disabled=false);
+  const btn = document.getElementById('btn-save');
+  if (btn) { btn.disabled=false; btn.textContent='💾 Simpan Revisi'; }
+  document.querySelectorAll('#new-data-rows input').forEach(i=>i.disabled=false);
+}
+
+function resetFilter() {
   document.getElementById('f-area').value='';
   ['f-region','f-entity','f-branch'].forEach(id=>document.getElementById(id).value='');
-  curArea='';
+  curArea=''; submitStatus=null; isRevisiMode=false; formLocked=false;
   document.getElementById('tbl-body').innerHTML=`<div class="empty"><div class="ei">🗂️</div><p>Pilih <strong>Kode Area</strong> lalu klik <strong>Tampilkan Data</strong></p></div>`;
   document.getElementById('tbl-title').textContent='Data Aset Terdaftar';
   document.getElementById('tbl-cnt').style.display='none';
@@ -466,32 +636,32 @@ function resetAll() {
   document.getElementById('stats-area').style.display='none';
   document.getElementById('confirm-bar').classList.remove('show');
   document.getElementById('new-data-section').style.display='none';
-  document.getElementById('card-tambahan').style.display='none';
+  document.getElementById('revisi-banner').classList.remove('show');
+  document.getElementById('locked-banner').classList.remove('show');
 }
 
 function renderTable(rows) {
-  document.getElementById('tbl-title').textContent=`Area: ${curArea} — Aset Terdaftar`;
+  document.getElementById('tbl-title').textContent=`Area: ${curArea}`;
   const cnt=document.getElementById('tbl-cnt');
   cnt.textContent=`${rows.length} unit`;cnt.style.display='inline-block';
   document.getElementById('tbl-actions').style.display='flex';
   if(!rows.length){document.getElementById('tbl-body').innerHTML=`<div class="empty"><div class="ei">📭</div><p>Tidak ada data</p></div>`;return;}
   let html=`<div class="table-wrap"><table><thead><tr>
-    <th style="width:40px">#</th><th style="min-width:175px">No. Inventaris</th>
-    <th style="min-width:155px">IMEI</th><th style="min-width:135px">SIM Card</th>
-    <th style="min-width:115px">SLS No.</th><th class="center" style="min-width:100px">Status HP</th>
-    <th style="min-width:220px">Catatan / Note</th>
+    <th style="width:40px">#</th><th>No. Inventaris</th><th>IMEI</th><th>SIM Card</th>
+    <th>SLS No.</th><th class="center">Status HP</th><th style="min-width:220px">Catatan</th>
   </tr></thead><tbody>`;
   rows.forEach((d,i)=>{
     const v=vData[d.id],isAda=v?.status==='ada',isTidak=v?.status==='tidak';
+    const dis=formLocked?'disabled':'';
     html+=`<tr class="${isAda?'hl-ada':isTidak?'hl-tidak':''}" id="tr-${d.id}">
       <td style="color:var(--text-muted);font-weight:600;font-size:12px">${i+1}</td>
       <td><span class="mono">${d.no_inv}</span></td><td><span class="mono">${d.imei}</span></td>
       <td><span class="mono">${d.sim}</span></td><td><span class="pill pill-blue">${d.slsno}</span></td>
       <td><div class="status-cell">
-        <button class="s-btn ${isAda?'on-ada':''}" onclick="setStatus(${d.id},'ada')">✓</button>
-        <button class="s-btn ${isTidak?'on-tidak':''}" onclick="setStatus(${d.id},'tidak')">✗</button>
+        <button class="s-btn ${isAda?'on-ada':''}" onclick="setStatus(${d.id},'ada')" ${dis}>✓</button>
+        <button class="s-btn ${isTidak?'on-tidak':''}" onclick="setStatus(${d.id},'tidak')" ${dis}>✗</button>
       </div></td>
-      <td><textarea class="note-ta" id="note-${d.id}" placeholder="Catatan..." oninput="vData[${d.id}].note=this.value">${v?.note||''}</textarea></td>
+      <td><textarea class="note-ta" id="note-${d.id}" placeholder="Catatan..." oninput="vData[${d.id}].note=this.value" ${dis}>${v?.note||''}</textarea></td>
     </tr>`;
   });
   html+=`</tbody></table></div>`;
@@ -499,6 +669,7 @@ function renderTable(rows) {
 }
 
 function setStatus(id,st) {
+  if(formLocked)return;
   if(!vData[id])vData[id]={status:null,note:''};
   vData[id].status=vData[id].status===st?null:st;
   const tr=document.getElementById(`tr-${id}`);
@@ -511,11 +682,13 @@ function setStatus(id,st) {
 }
 
 function bulkStatus(st) {
+  if(formLocked)return;
   DB.filter(d=>d.area===curArea).forEach(d=>{if(!vData[d.id])vData[d.id]={status:null,note:''};vData[d.id].status=st;});
   applyFilter();
 }
 
 function addNewDataRow() {
+  if(formLocked)return;
   const id=++ndCounter;newDataRows.push(id);
   const container=document.getElementById('new-data-rows');
   container.querySelector('[data-placeholder]')?.remove();
@@ -532,29 +705,6 @@ function getNewDataValues() {
   return newDataRows.map(id=>({no_inv:document.getElementById(`nd-inv-${id}`)?.value||'',sim:document.getElementById(`nd-sim-${id}`)?.value||'',slsno:document.getElementById(`nd-sls-${id}`)?.value||'',nama:document.getElementById(`nd-nama-${id}`)?.value||'',note:document.getElementById(`nd-note-${id}`)?.value||''})).filter(r=>r.no_inv||r.sim);
 }
 
-function addTambahanRow() {
-  const id=++tbCounter;tambahanRows.push(id);
-  const container=document.getElementById('tambahan-rows');
-  container.querySelector('.empty-tambahan')?.remove();
-  const row=document.createElement('div');row.className='tambahan-row';row.id=`tb-${id}`;
-  row.innerHTML=`<input type="text" id="tb-inv-${id}" placeholder="No. Inventaris"><input type="text" id="tb-imei-${id}" placeholder="IMEI"><input type="text" id="tb-sim-${id}" placeholder="SIM Card"><input type="text" id="tb-sls-${id}" placeholder="SLS No."><input type="text" id="tb-nama-${id}" placeholder="Nama Salesman"><input type="text" id="tb-note-${id}" placeholder="Catatan..."><button class="btn-del-row" onclick="removeTambahanRow(${id})">✕</button>`;
-  container.appendChild(row);updateTambahanCount();refreshConfBar(DB.filter(d=>d.area===curArea));
-}
-function removeTambahanRow(id) {
-  document.getElementById(`tb-${id}`)?.remove();tambahanRows=tambahanRows.filter(x=>x!==id);
-  if(!tambahanRows.length)document.getElementById('tambahan-rows').innerHTML=`<div class="empty-tambahan">Belum ada aset tambahan. Klik <strong>+ Tambah Aset</strong>.</div>`;
-  updateTambahanCount();refreshConfBar(DB.filter(d=>d.area===curArea));
-}
-function getTambahanValues() {
-  return tambahanRows.map(id=>({no_inv:document.getElementById(`tb-inv-${id}`)?.value||'',imei:document.getElementById(`tb-imei-${id}`)?.value||'',sim:document.getElementById(`tb-sim-${id}`)?.value||'',slsno:document.getElementById(`tb-sls-${id}`)?.value||'',nama:document.getElementById(`tb-nama-${id}`)?.value||'',note:document.getElementById(`tb-note-${id}`)?.value||''})).filter(r=>r.no_inv||r.imei);
-}
-function updateTambahanCount() {
-  const cnt=tambahanRows.length;
-  document.getElementById('cnt-tambahan').textContent=`${cnt} item`;
-  document.getElementById('cnt-tambahan').style.display='inline-block';
-  document.getElementById('s-tambahan').textContent=cnt;
-}
-
 function refreshStats(rows) {
   const total=rows.length,ada=rows.filter(d=>vData[d.id]?.status==='ada').length,tidak=rows.filter(d=>vData[d.id]?.status==='tidak').length;
   document.getElementById('s-total').textContent=total;document.getElementById('s-ada').textContent=ada;
@@ -565,97 +715,141 @@ function refreshStats(rows) {
 
 function refreshConfBar(rows) {
   const total=rows.length,ada=rows.filter(d=>vData[d.id]?.status==='ada').length,tidak=rows.filter(d=>vData[d.id]?.status==='tidak').length;
+  const hoa=currentUser?.name||currentUser?.username||'—';
   document.getElementById('cb-area').textContent=curArea;
-  document.getElementById('cb-hoa').textContent=document.getElementById('nm-hoa').value||'—';
+  document.getElementById('cb-hoa').textContent=hoa;
   document.getElementById('cb-total').textContent=total;document.getElementById('cb-ada').textContent=ada;
   document.getElementById('cb-tidak').textContent=tidak;document.getElementById('cb-belum').textContent=total-ada-tidak;
-  document.getElementById('cb-tambahan').textContent=tambahanRows.length;
   document.getElementById('cb-newdata').textContent=newDataRows.length;
 }
 
 async function doSave() {
-  const hoa=document.getElementById('nm-hoa').value;
-  if(!hoa){toast('Isi Nama HOA terlebih dahulu!','err');return;}
+  if(formLocked)return;
   if(!curArea){toast('Pilih area terlebih dahulu','err');return;}
   const rows=DB.filter(d=>d.area===curArea);
   const belum=rows.filter(d=>!vData[d.id]?.status).length;
   if(belum>0&&!confirm(`⚠️ Masih ada ${belum} item belum dicek.\nLanjutkan simpan?`))return;
 
-  const tanggal=document.getElementById('nm-tanggal').value;
-  const ts=new Date().toLocaleString('id-ID');
+  const hoa = currentUser.name||currentUser.username;
+  const email = currentUser.username;
+  const tanggal = document.getElementById('nm-tanggal').value;
+  const ts = new Date().toLocaleString('id-ID');
+  const newSubmitStatus = isRevisiMode ? 'REVISED' : 'SUBMITTED';
+
   const btn=document.getElementById('btn-save');
   btn.disabled=true;btn.textContent='⏳ Menyimpan...';
   showLoading('Menyimpan data ke SharePoint...');
 
   try {
-    const token=await getToken();
-    const listUrl=`${SP_SITE}/_api/web/lists/getbytitle('${SP_LIST}')/items`;
-    const headers={
-      'Accept':'application/json;odata=verbose',
-      'Content-Type':'application/json;odata=verbose',
-      'Authorization':`Bearer ${token}`
+    const token = await getToken();
+    const listUrl = `${SP_SITE}/_api/web/lists/getbytitle('${SP_LIST}')/items`;
+    const headers = {
+      'Accept': 'application/json;odata=verbose',
+      'Content-Type': 'application/json;odata=verbose',
+      'Authorization': `Bearer ${token}`
     };
 
-    const allItems=[
+    // Cek duplikasi sebelum simpan
+    const allItems = [
       ...rows.map(d=>({
-        Title:d.no_inv,AREA:curArea,NAMA_HOA:hoa,TANGGAL:tanggal,TIMESTAMP:ts,
-        NO_INVENTARIS:d.no_inv,IMEI:d.imei,SIM_CARD:d.sim,SLSNO:d.slsno,
-        STATUS:vData[d.id]?.status==='ada'?'ADA':vData[d.id]?.status==='tidak'?'TIDAK ADA':'BELUM DICEK',
-        CATATAN:vData[d.id]?.note||'',TIPE:'TERDAFTAR'
+        Title: String(d.no_inv||'item'),
+        AREA: curArea, NAMA_HOA: hoa, EMAIL_USER: email,
+        TANGGAL: tanggal, TIMESTAMP: ts,
+        REGION: curRegion, ENTITY: curEntity, BRANCH: curBranch,
+        NO_INVENTARIS: String(d.no_inv||''),
+        IMEI: String(d.imei||''), SIM_CARD: String(d.sim||''), SLSNO: String(d.slsno||''),
+        STATUS: vData[d.id]?.status==='ada'?'ADA':vData[d.id]?.status==='tidak'?'TIDAK ADA':'BELUM DICEK',
+        CATATAN: String(vData[d.id]?.note||''), TIPE: 'TERDAFTAR',
+        SUBMIT_STATUS: newSubmitStatus, REVISED_AT: isRevisiMode?ts:'', REVISED_BY: isRevisiMode?email:''
       })),
-      ...getNewDataValues().map(d=>({Title:d.no_inv||'NEW',AREA:curArea,NAMA_HOA:hoa,TANGGAL:tanggal,TIMESTAMP:ts,NO_INVENTARIS:d.no_inv,IMEI:'',SIM_CARD:d.sim,SLSNO:d.slsno,STATUS:'NEW DATA',CATATAN:d.note,TIPE:'NEW DATA'})),
-      ...getTambahanValues().map(d=>({Title:d.no_inv||'TAMBAHAN',AREA:curArea,NAMA_HOA:hoa,TANGGAL:tanggal,TIMESTAMP:ts,NO_INVENTARIS:d.no_inv,IMEI:d.imei,SIM_CARD:d.sim,SLSNO:d.slsno,STATUS:'TAMBAHAN',CATATAN:d.note,TIPE:'ASET TAMBAHAN'}))
+      ...getNewDataValues().map(d=>({
+        Title: String(d.no_inv||'NEW'), AREA: curArea, NAMA_HOA: hoa, EMAIL_USER: email,
+        TANGGAL: tanggal, TIMESTAMP: ts, REGION: curRegion, ENTITY: curEntity, BRANCH: curBranch,
+        NO_INVENTARIS: String(d.no_inv||''), IMEI: '', SIM_CARD: String(d.sim||''), SLSNO: String(d.slsno||''),
+        STATUS: 'NEW DATA', CATATAN: String(d.note||''), TIPE: 'NEW DATA',
+        SUBMIT_STATUS: newSubmitStatus, REVISED_AT: isRevisiMode?ts:'', REVISED_BY: isRevisiMode?email:''
+      }))
     ];
 
-    let ok=0, errMsg='';
-    for(const item of allItems){
-      const body = {
-        __metadata: {type: 'SP.Data.VerifikasiAsetHPListItem'},
-        Title: String(item.NO_INVENTARIS||'item'),
-        AREA: String(item.AREA||''),
-        NAMA_HOA: String(item.NAMA_HOA||''),
-        TANGGAL: String(item.TANGGAL||''),
-        NO_INVENTARIS: String(item.NO_INVENTARIS||''),
-        IMEI: String(item.IMEI||''),
-        SIM_CARD: String(item.SIM_CARD||''),
-        SLSNO: String(item.SLSNO||''),
-        STATUS: String(item.STATUS||''),
-        CATATAN: String(item.CATATAN||''),
-        TIPE: String(item.TIPE||''),
-        TIMESTAMP: String(item.TIMESTAMP||'')
-      };
-      const res=await fetch(listUrl,{method:'POST',headers,body:JSON.stringify(body)});
-      if(res.ok){ ok++; } else {
-        const errData = await res.text();
-        errMsg = errData;
-        console.error('Save error:', res.status, errData);
+    let ok = 0, errMsg = '';
+
+    if (isRevisiMode && existingItemIds.length > 0) {
+      // UPDATE existing items - hapus dulu semua, lalu tambah baru
+      for (const itemId of existingItemIds) {
+        await fetch(`${listUrl}(${itemId})`, {
+          method: 'POST',
+          headers: { ...headers, 'X-HTTP-Method': 'DELETE', 'IF-MATCH': '*' }
+        });
       }
     }
-    if(ok>0) toast(`✅ ${ok} data ${curArea} berhasil disimpan ke SharePoint!`);
-    else toast('Gagal simpan. Error: ' + errMsg.substring(0,200), 'err');
+
+    // INSERT semua item baru
+    for (const item of allItems) {
+      const body = { __metadata: {type:'SP.Data.VerifikasiAsetHPListItem'}, ...item };
+      const res = await fetch(listUrl, { method:'POST', headers, body:JSON.stringify(body) });
+      if (res.ok) ok++;
+      else { const e=await res.text(); errMsg=e; console.error(res.status,e); }
+    }
+
+    if (ok > 0) {
+      savedRows = rows;
+      formLocked = true;
+      submitStatus = newSubmitStatus;
+      showSuksesScreen(rows, hoa, tanggal, ok);
+    } else {
+      toast('Gagal simpan: ' + errMsg.substring(0,200), 'err');
+    }
   } catch(e) {
     toast('Gagal simpan: '+e.message,'err');
   } finally {
-    hideLoading();btn.disabled=false;btn.textContent='💾 Simpan ke SharePoint';
+    hideLoading();
+    btn.disabled=false;
+    btn.textContent=isRevisiMode?'💾 Simpan Revisi':'💾 Simpan';
   }
+}
+
+function showSuksesScreen(rows, hoa, tanggal, ok) {
+  const ada=rows.filter(d=>vData[d.id]?.status==='ada').length;
+  const tidak=rows.filter(d=>vData[d.id]?.status==='tidak').length;
+  const belum=rows.filter(d=>!vData[d.id]?.status).length;
+  const nd=getNewDataValues().length;
+  document.getElementById('sukses-summary').innerHTML=`
+    <div class="sukses-summary-row"><span class="sukses-summary-label">HOA</span><span class="sukses-summary-val">${hoa}</span></div>
+    <div class="sukses-summary-row"><span class="sukses-summary-label">Area</span><span class="sukses-summary-val">${curArea}</span></div>
+    <div class="sukses-summary-row"><span class="sukses-summary-label">Tanggal</span><span class="sukses-summary-val">${tanggal}</span></div>
+    <div class="sukses-summary-row"><span class="sukses-summary-label">Total Aset</span><span class="sukses-summary-val">${rows.length} unit</span></div>
+    <div class="sukses-summary-row"><span class="sukses-summary-label">Ada ✅</span><span class="sukses-summary-val" style="color:var(--success)">${ada}</span></div>
+    <div class="sukses-summary-row"><span class="sukses-summary-label">Tidak Ada ❌</span><span class="sukses-summary-val" style="color:var(--danger)">${tidak}</span></div>
+    <div class="sukses-summary-row"><span class="sukses-summary-label">Belum Dicek ⏳</span><span class="sukses-summary-val" style="color:var(--warning)">${belum}</span></div>
+    ${nd>0?`<div class="sukses-summary-row"><span class="sukses-summary-label">New Data ⚠️</span><span class="sukses-summary-val" style="color:var(--danger)">${nd}</span></div>`:''}
+    <div class="sukses-summary-row"><span class="sukses-summary-label">Data tersimpan</span><span class="sukses-summary-val" style="color:var(--success)">${ok} record</span></div>
+  `;
+  document.getElementById('confirm-bar').classList.remove('show');
+  document.getElementById('sukses-screen').classList.add('show');
 }
 
 function exportExcel() {
   if(!curArea){toast('Pilih area dulu','err');return;}
-  const hoa=document.getElementById('nm-hoa').value,tanggal=document.getElementById('nm-tanggal').value;
+  const hoa=currentUser?.name||currentUser?.username||'';
+  const tanggal=document.getElementById('nm-tanggal').value;
   const rows=DB.filter(d=>d.area===curArea);
   const wb=XLSX.utils.book_new();
-  const s1=[['VERIFIKASI ASET HP SALESMAN - '+curArea],['HOA:'+(hoa||'—'),'Tanggal:'+tanggal,'Dicetak:'+new Date().toLocaleString('id-ID')],[],
+  const s1=[
+    ['VERIFIKASI ASET HP SALESMAN - '+curArea],
+    ['HOA: '+(hoa||'—'),'Tanggal: '+tanggal,'Dicetak: '+new Date().toLocaleString('id-ID')],
+    [],
     ['No','No Inventaris','IMEI','SIM Card','SLS No.','Region','Entity','Branch','Area','Status','Catatan'],
-    ...rows.map((d,i)=>[i+1,d.no_inv,d.imei,d.sim,d.slsno,d.region,d.entity,d.branch,d.area,vData[d.id]?.status==='ada'?'ADA':vData[d.id]?.status==='tidak'?'TIDAK ADA':'BELUM DICEK',vData[d.id]?.note||''])];
+    ...rows.map((d,i)=>[i+1,d.no_inv,d.imei,d.sim,d.slsno,d.region,d.entity,d.branch,d.area,
+      vData[d.id]?.status==='ada'?'ADA':vData[d.id]?.status==='tidak'?'TIDAK ADA':'BELUM DICEK',
+      vData[d.id]?.note||''])
+  ];
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s1),'Aset Terdaftar');
   const ndVals=getNewDataValues();
-  const s2=[['NEW DATA'],['Area:'+curArea,'HOA:'+(hoa||'—'),'Tanggal:'+tanggal],[],['No','No Inventaris / IMEI','SIM Card','SLS No.','Nama Salesman','Catatan'],...(ndVals.length?ndVals.map((r,i)=>[i+1,r.no_inv,r.sim,r.slsno,r.nama,r.note]):[['(Tidak ada)']])];
+  const s2=[['NEW DATA'],['Area: '+curArea,'HOA: '+(hoa||'—'),'Tanggal: '+tanggal],[],
+    ['No','No Inventaris / IMEI','SIM Card','SLS No.','Nama Salesman','Catatan'],
+    ...(ndVals.length?ndVals.map((r,i)=>[i+1,r.no_inv,r.sim,r.slsno,r.nama,r.note]):[['(Tidak ada)']])];
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s2),'New Data');
-  const tbVals=getTambahanValues();
-  const s3=[['ASET TAMBAHAN'],['Area:'+curArea,'HOA:'+(hoa||'—'),'Tanggal:'+tanggal],[],['No','No Inventaris','IMEI','SIM Card','SLS No.','Nama Salesman','Catatan'],...(tbVals.length?tbVals.map((r,i)=>[i+1,r.no_inv,r.imei,r.sim,r.slsno,r.nama,r.note]):[['(Tidak ada)']])];
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s3),'Aset Tambahan');
-  XLSX.writeFile(wb,`Verifikasi_${curArea}_${hoa.replace(/\s+/g,'_')}_${tanggal}.xlsx`);
+  XLSX.writeFile(wb,`Verifikasi_${curArea}_${(hoa).replace(/\s+/g,'_')}_${tanggal}.xlsx`);
   toast('📊 File Excel berhasil diunduh!');
 }
 
