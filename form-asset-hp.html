@@ -9,23 +9,47 @@
 <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
 <style>
 :root {
-  --bg:#f0f2f5; --white:#fff; --surface:#f8f9fa; --border:#e2e8f0; --border-dark:#cbd5e1;
-  --accent:#0ea5e9; --accent-dark:#0284c7; --success:#16a34a; --success-bg:#dcfce7;
-  --success-border:#86efac; --danger:#dc2626; --danger-bg:#fee2e2; --danger-border:#fca5a5;
-  --warning:#d97706; --warning-bg:#fef3c7; --purple:#7c3aed; --purple-bg:#ede9fe;
-  --purple-border:#c4b5fd; --text:#1e293b; --text-mid:#475569; --text-muted:#94a3b8;
-  --radius:8px; --shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
+  --bg:#f0f2f5;--white:#fff;--surface:#f8f9fa;--border:#e2e8f0;--border-dark:#cbd5e1;
+  --accent:#0ea5e9;--accent-dark:#0284c7;--success:#16a34a;--success-bg:#dcfce7;
+  --success-border:#86efac;--danger:#dc2626;--danger-bg:#fee2e2;--danger-border:#fca5a5;
+  --warning:#d97706;--warning-bg:#fef3c7;--purple:#7c3aed;--purple-bg:#ede9fe;
+  --purple-border:#c4b5fd;--text:#1e293b;--text-mid:#475569;--text-muted:#94a3b8;
+  --radius:8px;--shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:130px;}
 
+/* LOGIN */
+.login-screen{position:fixed;inset:0;background:#f0f2f5;display:flex;align-items:center;justify-content:center;z-index:999;}
+.login-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:48px 40px;text-align:center;max-width:400px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.08);}
+.login-logo{width:64px;height:64px;background:#1e3a5f;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 20px;}
+.login-card h1{font-size:22px;font-weight:800;color:#1e3a5f;margin-bottom:8px;}
+.login-card p{font-size:14px;color:var(--text-muted);margin-bottom:28px;line-height:1.6;}
+.btn-ms-login{width:100%;height:48px;background:#1e3a5f;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;}
+.btn-ms-login:hover{background:#162d4a;box-shadow:0 4px 16px rgba(30,58,95,0.3);transform:translateY(-1px);}
+.login-note{font-size:11px;color:var(--text-muted);margin-top:16px;}
+
+/* LOADING */
+.loading-overlay{position:fixed;inset:0;background:rgba(240,242,245,0.9);display:none;align-items:center;justify-content:center;z-index:500;flex-direction:column;gap:14px;}
+.loading-overlay.show{display:flex;}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:14px;color:var(--text-mid);font-weight:500;}
+
+/* HEADER */
 .header{background:#1e3a5f;padding:0 28px;display:flex;align-items:center;gap:14px;height:60px;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,0.2);}
 .header-logo{width:34px;height:34px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
 .header-title{font-size:15px;font-weight:700;color:#fff;}
 .header-sub{font-size:11px;color:rgba(255,255,255,0.5);}
 .header-date{margin-left:auto;font-size:12px;color:rgba(255,255,255,0.6);font-weight:500;}
+.header-user{display:flex;align-items:center;gap:8px;margin-left:16px;}
+.user-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;}
+.user-name{font-size:12px;color:rgba(255,255,255,0.8);font-weight:500;}
+.btn-logout{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;}
+.btn-logout:hover{background:rgba(255,255,255,0.2);}
 
-.page{max-width:1400px;margin:0 auto;padding:20px;}
+.page{max-width:1400px;margin:0 auto;padding:20px;display:none;}
+.page.show{display:block;}
 
 .card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;}
 .card-head{padding:13px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
@@ -77,7 +101,6 @@ td{padding:10px 14px;vertical-align:middle;}
 .mono{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text-mid);}
 .pill{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;}
 .pill-blue{background:#dbeafe;color:#1d4ed8;}
-
 .status-cell{display:flex;gap:6px;justify-content:center;}
 .s-btn{width:38px;height:32px;border-radius:6px;border:2px solid var(--border-dark);background:var(--surface);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
 .s-btn:hover{transform:scale(1.08);}
@@ -85,14 +108,13 @@ td{padding:10px 14px;vertical-align:middle;}
 .s-btn.on-tidak{border-color:var(--danger);background:var(--danger-bg);box-shadow:0 0 0 1px var(--danger-border);}
 tr.hl-ada{background:#f0fdf4 !important;}
 tr.hl-tidak{background:#fff5f5 !important;}
-
 .note-ta{width:100%;min-width:180px;padding:6px 10px;border-radius:6px;border:1.5px solid var(--border);font-family:inherit;font-size:12px;color:var(--text);resize:none;height:32px;overflow:hidden;transition:all 0.15s;background:var(--surface);}
 .note-ta:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(14,165,233,0.1);height:60px;background:#fff;}
 
 .new-data-area{padding:12px 20px 16px;}
 .new-data-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:8px;align-items:center;background:#fafafa;border:1px dashed var(--border-dark);border-radius:8px;padding:10px 14px;margin-bottom:8px;animation:fadeIn 0.2s ease;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
-.new-data-row input{height:32px;padding:0 10px;border-radius:6px;border:1.5px solid var(--border-dark);font-family:inherit;font-size:12px;color:var(--text);background:#fff;transition:border-color 0.15s;}
+.new-data-row input{height:32px;padding:0 10px;border-radius:6px;border:1.5px solid var(--border-dark);font-family:inherit;font-size:12px;color:var(--text);background:#fff;}
 .new-data-row input:focus{outline:none;border-color:var(--danger);}
 .new-data-row input::placeholder{color:var(--text-muted);}
 .new-data-header{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:8px;padding:0 14px;margin-bottom:6px;}
@@ -108,7 +130,6 @@ tr.hl-tidak{background:#fff5f5 !important;}
 .tambahan-header{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr auto;gap:8px;padding:0 14px;margin-bottom:6px;}
 .tambahan-header span{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--purple);}
 .empty-tambahan{padding:20px;text-align:center;color:var(--text-muted);font-size:13px;}
-
 .empty{padding:60px 20px;text-align:center;color:var(--text-muted);}
 .empty .ei{font-size:48px;margin-bottom:10px;}
 .empty p{font-size:14px;}
@@ -127,8 +148,11 @@ tr.hl-tidak{background:#fff5f5 !important;}
 .cb-chip .cv{font-size:16px;font-weight:800;color:#fff;}
 .cv-green{color:#4ade80 !important;}.cv-red{color:#f87171 !important;}.cv-orange{color:#fbbf24 !important;}.cv-purple{color:#c4b5fd !important;}
 .cb-actions{display:flex;gap:8px;align-items:center;}
-.btn-save{height:44px;padding:0 28px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all 0.15s;}
+.btn-excel{height:36px;padding:0 14px;background:#166534;color:#fff;border:1px solid #15803d;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+.btn-excel:hover{background:#15803d;}
+.btn-save{height:42px;padding:0 24px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all 0.15s;}
 .btn-save:hover{background:#38bdf8;box-shadow:0 4px 14px rgba(14,165,233,0.4);transform:translateY(-1px);}
+.btn-save:disabled{background:#94a3b8;cursor:not-allowed;transform:none;box-shadow:none;}
 
 .toasts{position:fixed;bottom:80px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px;}
 .toast{background:#1e293b;color:#fff;padding:11px 16px;border-radius:8px;font-size:13px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.2);border-left:4px solid var(--accent);animation:tIn 0.3s ease;max-width:340px;}
@@ -138,6 +162,27 @@ tr.hl-tidak{background:#fff5f5 !important;}
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">📱</div>
+    <h1>Verifikasi Aset HP</h1>
+    <p>Form pengecekan aset HP Salesman<br>MS Distribution — Asset Management</p>
+    <button class="btn-ms-login" onclick="doLogin()">
+      <svg width="20" height="20" viewBox="0 0 21 21" fill="none"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+      Login dengan Microsoft 365
+    </button>
+    <p class="login-note">Gunakan akun Microsoft 365 perusahaan Anda</p>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Memuat...</div>
+</div>
+
+<!-- HEADER -->
 <div class="header">
   <div class="header-logo">📱</div>
   <div>
@@ -145,10 +190,14 @@ tr.hl-tidak{background:#fff5f5 !important;}
     <div class="header-sub">Asset Management · MS Distribution</div>
   </div>
   <div class="header-date" id="hdr-date"></div>
+  <div class="header-user" id="header-user" style="display:none">
+    <div class="user-avatar" id="user-avatar">?</div>
+    <div class="user-name" id="user-name-display"></div>
+    <button class="btn-logout" onclick="doLogout()">Logout</button>
+  </div>
 </div>
 
-<div class="page">
-
+<div class="page" id="main-page">
   <div class="user-strip">
     <div>
       <span class="ul">Nama HOA</span>
@@ -157,6 +206,22 @@ tr.hl-tidak{background:#fff5f5 !important;}
     <div>
       <span class="ul">Tanggal Pengecekan</span>
       <input class="user-input" id="nm-tanggal" type="date">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><span>📂</span><h2>Load Data Master HP</h2></div>
+    <div class="card-body">
+      <div class="form-row" style="align-items:center">
+        <div>
+          <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-mid);display:block;margin-bottom:6px">File master_data_hp.xlsx</label>
+          <label style="display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 16px;background:var(--accent);color:#fff;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">
+            📂 Pilih File Excel
+            <input type="file" accept=".xlsx,.xls" onchange="loadMasterFile(this)" style="display:none">
+          </label>
+        </div>
+        <div style="font-size:13px;font-weight:500;color:var(--text-muted)" id="master-status">Belum ada file dimuat</div>
+      </div>
     </div>
   </div>
 
@@ -212,7 +277,7 @@ tr.hl-tidak{background:#fff5f5 !important;}
       </div>
       <div class="new-data-area">
         <div class="new-data-header"><span>No. Inventaris / IMEI</span><span>SIM Card</span><span>SLS No.</span><span>Nama Salesman</span><span>Catatan</span><span></span></div>
-        <div id="new-data-rows"><div data-placeholder style="padding:12px 14px;text-align:center;color:var(--text-muted);font-size:12px">Klik "+ Tambah Baris" untuk menambah aset tidak terdaftar</div></div>
+        <div id="new-data-rows"><div data-placeholder style="padding:12px 14px;text-align:center;color:var(--text-muted);font-size:12px">Klik "+ Tambah Baris"</div></div>
       </div>
     </div>
   </div>
@@ -229,7 +294,6 @@ tr.hl-tidak{background:#fff5f5 !important;}
       <div id="tambahan-rows"><div class="empty-tambahan">Belum ada aset tambahan. Klik <strong>+ Tambah Aset</strong>.</div></div>
     </div>
   </div>
-
 </div>
 
 <div class="confirm-bar" id="confirm-bar">
@@ -245,88 +309,147 @@ tr.hl-tidak{background:#fff5f5 !important;}
     <div class="cb-chip"><span class="cl">New Data</span><span class="cv cv-red" id="cb-newdata">0</span></div>
   </div>
   <div class="cb-actions">
-    <button class="btn-save" onclick="doSave()">💾 Simpan ke SharePoint</button>
+    <button class="btn-excel" onclick="exportExcel()">📊 Export Excel</button>
+    <button class="btn-save" id="btn-save" onclick="doSave()">💾 Simpan ke SharePoint</button>
   </div>
 </div>
 
 <div class="toasts" id="toasts"></div>
 
 <script>
-// ── DATA MASTER (diambil dari master_data_hp.xlsx yang diupload) ──
-// Untuk load dari file Excel lokal, gunakan tombol di bawah
-// Atau isi manual data di sini sebagai fallback
+// ============================================================
+// KONFIGURASI
+// ============================================================
+const CLIENT_ID  = '7d2d5c72-02c0-48ed-a1d2-26a3113f8efb';
+const TENANT_ID  = 'ca373342-64ee-46d7-95e8-cc81024e9682';
+const SP_SITE    = 'https://cimoryindonesia.sharepoint.com/sites/asset';
+const SP_LIST    = 'VerifikasiAsetHP';
+const SCOPES     = [`${SP_SITE}/.default`];
+// ============================================================
 
-let DB = [];
-let vData = {};
-let curArea = '';
+let msalApp = null;
+let currentUser = null;
+let DB = [], vData = {}, curArea = '';
 let newDataRows = [], tambahanRows = [];
 let ndCounter = 0, tbCounter = 0;
 
-window.addEventListener('DOMContentLoaded', () => {
+function initMsal() {
+  if (msalApp) return;
+  msalApp = new msal.PublicClientApplication({
+    auth: {
+      clientId: CLIENT_ID,
+      authority: `https://login.microsoftonline.com/${TENANT_ID}`,
+      redirectUri: window.location.origin + window.location.pathname
+    },
+    cache: { cacheLocation: 'sessionStorage' }
+  });
+}
+
+async function doLogin() {
+  try {
+    initMsal();
+    await msalApp.initialize();
+    const res = await msalApp.loginPopup({ scopes: SCOPES });
+    currentUser = res.account;
+    afterLogin();
+  } catch(e) {
+    toast('Login gagal: ' + e.message, 'err');
+  }
+}
+
+function afterLogin() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('header-user').style.display = 'flex';
+  const name = currentUser.name || currentUser.username;
+  document.getElementById('user-name-display').textContent = name;
+  document.getElementById('user-avatar').textContent = name.charAt(0).toUpperCase();
+  document.getElementById('nm-hoa').value = name;
+  document.getElementById('main-page').classList.add('show');
+}
+
+async function doLogout() {
+  if (msalApp) msalApp.logoutPopup();
+  location.reload();
+}
+
+async function getToken() {
+  initMsal();
+  await msalApp.initialize();
+  const accounts = msalApp.getAllAccounts();
+  try {
+    if (accounts.length > 0) {
+      const res = await msalApp.acquireTokenSilent({ scopes: SCOPES, account: accounts[0] });
+      return res.accessToken;
+    }
+  } catch(e) {}
+  const res = await msalApp.acquireTokenPopup({ scopes: SCOPES });
+  return res.accessToken;
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
   const now = new Date();
   document.getElementById('hdr-date').textContent =
     now.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   document.getElementById('nm-tanggal').value = now.toISOString().split('T')[0];
+  // Cek session yang masih aktif
+  initMsal();
+  await msalApp.initialize();
+  const accounts = msalApp.getAllAccounts();
+  if (accounts.length > 0) {
+    currentUser = accounts[0];
+    afterLogin();
+  }
 });
 
-// ── LOAD MASTER DATA dari file Excel lokal ──
 function loadMasterFile(input) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
-      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const wb = XLSX.read(e.target.result, {type:'array'});
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
-      DB = rows.map((r, i) => ({
-        id: i + 1,
-        principle: r['PRINCIPLE'] || '',
-        no_inv:    r['NO_INVENTARIS'] || '',
-        imei:      r['IMEI'] || '',
-        sim:       String(r['SIM_CARD'] || ''),
-        slsno:     r['SLSNO'] || '',
-        region:    r['REGION'] || '',
-        entity:    r['ENTITY'] || '',
-        branch:    r['BRANCH'] || '',
-        area:      String(r['AREA'] || '').toUpperCase(),
-      })).filter(r => r.area);
-
-      const areas = [...new Set(DB.map(d=>d.area))].sort();
-      const sel = document.getElementById('f-area');
-      sel.innerHTML = '<option value="">— Pilih Area —</option>';
-      areas.forEach(a => {
-        const o = document.createElement('option');
-        o.value=a; o.textContent=a; sel.appendChild(o);
-      });
-      document.getElementById('master-status').textContent = `✅ ${DB.length} data HP dimuat dari ${file.name}`;
-      document.getElementById('master-status').style.color = 'var(--success)';
+      const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+      DB = rows.map((r,i) => ({
+        id: i+1,
+        principle: r['PRINCIPLE']||'',
+        no_inv:    r['NO_INVENTARIS']||'',
+        imei:      r['IMEI']||'',
+        sim:       String(r['SIM_CARD']||''),
+        slsno:     r['SLSNO']||'',
+        region:    r['REGION']||'',
+        entity:    r['ENTITY']||'',
+        branch:    r['BRANCH']||'',
+        area:      String(r['AREA']||'').toUpperCase(),
+      })).filter(r=>r.area);
+      const areas=[...new Set(DB.map(d=>d.area))].sort();
+      const sel=document.getElementById('f-area');
+      sel.innerHTML='<option value="">— Pilih Area —</option>';
+      areas.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o);});
+      document.getElementById('master-status').textContent=`✅ ${DB.length} data HP dimuat dari ${file.name}`;
+      document.getElementById('master-status').style.color='var(--success)';
       toast(`✅ ${DB.length} data HP berhasil dimuat!`);
-    } catch(e) {
-      toast('Gagal baca file: ' + e.message, 'err');
-    }
+    } catch(e) { toast('Gagal baca file: '+e.message,'err'); }
   };
   reader.readAsArrayBuffer(file);
 }
 
 function onAreaChange() {
-  const area = document.getElementById('f-area').value;
-  const row = DB.find(d=>d.area===area);
-  document.getElementById('f-region').value = row?.region||'';
-  document.getElementById('f-entity').value = row?.entity||'';
-  document.getElementById('f-branch').value = row?.branch||'';
+  const area=document.getElementById('f-area').value;
+  const row=DB.find(d=>d.area===area);
+  document.getElementById('f-region').value=row?.region||'';
+  document.getElementById('f-entity').value=row?.entity||'';
+  document.getElementById('f-branch').value=row?.branch||'';
 }
 
 function applyFilter() {
-  const area = document.getElementById('f-area').value;
-  if (!area) { toast('Pilih Kode Area terlebih dahulu!','err'); return; }
-  if (!DB.length) { toast('Load master data HP terlebih dahulu!','err'); return; }
-  curArea = area;
-  const rows = DB.filter(d=>d.area===area);
-  rows.forEach(d => { if (!vData[d.id]) vData[d.id]={status:null,note:''}; });
-  renderTable(rows);
-  refreshStats(rows);
-  refreshConfBar(rows);
+  const area=document.getElementById('f-area').value;
+  if(!area){toast('Pilih Kode Area terlebih dahulu!','err');return;}
+  if(!DB.length){toast('Load master data HP terlebih dahulu!','err');return;}
+  curArea=area;
+  const rows=DB.filter(d=>d.area===area);
+  rows.forEach(d=>{if(!vData[d.id])vData[d.id]={status:null,note:''};});
+  renderTable(rows); refreshStats(rows); refreshConfBar(rows);
   document.getElementById('confirm-bar').classList.add('show');
   document.getElementById('new-data-section').style.display='block';
   document.getElementById('card-tambahan').style.display='block';
@@ -349,28 +472,24 @@ function resetAll() {
 function renderTable(rows) {
   document.getElementById('tbl-title').textContent=`Area: ${curArea} — Aset Terdaftar`;
   const cnt=document.getElementById('tbl-cnt');
-  cnt.textContent=`${rows.length} unit`; cnt.style.display='inline-block';
+  cnt.textContent=`${rows.length} unit`;cnt.style.display='inline-block';
   document.getElementById('tbl-actions').style.display='flex';
-  if (!rows.length) { document.getElementById('tbl-body').innerHTML=`<div class="empty"><div class="ei">📭</div><p>Tidak ada data untuk area ini</p></div>`; return; }
+  if(!rows.length){document.getElementById('tbl-body').innerHTML=`<div class="empty"><div class="ei">📭</div><p>Tidak ada data</p></div>`;return;}
   let html=`<div class="table-wrap"><table><thead><tr>
     <th style="width:40px">#</th><th style="min-width:175px">No. Inventaris</th>
     <th style="min-width:155px">IMEI</th><th style="min-width:135px">SIM Card</th>
-    <th style="min-width:115px">SLS No.</th>
-    <th class="center" style="min-width:100px">Status HP</th>
+    <th style="min-width:115px">SLS No.</th><th class="center" style="min-width:100px">Status HP</th>
     <th style="min-width:220px">Catatan / Note</th>
   </tr></thead><tbody>`;
   rows.forEach((d,i)=>{
-    const v=vData[d.id];
-    const isAda=v?.status==='ada', isTidak=v?.status==='tidak';
+    const v=vData[d.id],isAda=v?.status==='ada',isTidak=v?.status==='tidak';
     html+=`<tr class="${isAda?'hl-ada':isTidak?'hl-tidak':''}" id="tr-${d.id}">
       <td style="color:var(--text-muted);font-weight:600;font-size:12px">${i+1}</td>
-      <td><span class="mono">${d.no_inv}</span></td>
-      <td><span class="mono">${d.imei}</span></td>
-      <td><span class="mono">${d.sim}</span></td>
-      <td><span class="pill pill-blue">${d.slsno}</span></td>
+      <td><span class="mono">${d.no_inv}</span></td><td><span class="mono">${d.imei}</span></td>
+      <td><span class="mono">${d.sim}</span></td><td><span class="pill pill-blue">${d.slsno}</span></td>
       <td><div class="status-cell">
-        <button class="s-btn ${isAda?'on-ada':''}" onclick="setStatus(${d.id},'ada')" title="Ada ✓">✓</button>
-        <button class="s-btn ${isTidak?'on-tidak':''}" onclick="setStatus(${d.id},'tidak')" title="Tidak Ada ✗">✗</button>
+        <button class="s-btn ${isAda?'on-ada':''}" onclick="setStatus(${d.id},'ada')">✓</button>
+        <button class="s-btn ${isTidak?'on-tidak':''}" onclick="setStatus(${d.id},'tidak')">✗</button>
       </div></td>
       <td><textarea class="note-ta" id="note-${d.id}" placeholder="Catatan..." oninput="vData[${d.id}].note=this.value">${v?.note||''}</textarea></td>
     </tr>`;
@@ -380,7 +499,7 @@ function renderTable(rows) {
 }
 
 function setStatus(id,st) {
-  if(!vData[id]) vData[id]={status:null,note:''};
+  if(!vData[id])vData[id]={status:null,note:''};
   vData[id].status=vData[id].status===st?null:st;
   const tr=document.getElementById(`tr-${id}`);
   const btns=tr.querySelectorAll('.s-btn');
@@ -388,30 +507,25 @@ function setStatus(id,st) {
   btns[0].className='s-btn'+(vData[id].status==='ada'?' on-ada':'');
   btns[1].className='s-btn'+(vData[id].status==='tidak'?' on-tidak':'');
   const rows=DB.filter(d=>d.area===curArea);
-  refreshStats(rows); refreshConfBar(rows);
+  refreshStats(rows);refreshConfBar(rows);
 }
 
 function bulkStatus(st) {
-  DB.filter(d=>d.area===curArea).forEach(d=>{
-    if(!vData[d.id]) vData[d.id]={status:null,note:''};
-    vData[d.id].status=st;
-  });
+  DB.filter(d=>d.area===curArea).forEach(d=>{if(!vData[d.id])vData[d.id]={status:null,note:''};vData[d.id].status=st;});
   applyFilter();
 }
 
 function addNewDataRow() {
-  const id=++ndCounter; newDataRows.push(id);
+  const id=++ndCounter;newDataRows.push(id);
   const container=document.getElementById('new-data-rows');
-  const ph=container.querySelector('[data-placeholder]'); if(ph) ph.remove();
-  const row=document.createElement('div'); row.className='new-data-row'; row.id=`nd-${id}`;
+  container.querySelector('[data-placeholder]')?.remove();
+  const row=document.createElement('div');row.className='new-data-row';row.id=`nd-${id}`;
   row.innerHTML=`<input type="text" id="nd-inv-${id}" placeholder="No. Inventaris / IMEI"><input type="text" id="nd-sim-${id}" placeholder="SIM Card"><input type="text" id="nd-sls-${id}" placeholder="SLS No."><input type="text" id="nd-nama-${id}" placeholder="Nama Salesman"><input type="text" id="nd-note-${id}" placeholder="Catatan..."><button class="btn-del-row" onclick="removeNewDataRow(${id})">✕</button>`;
-  container.appendChild(row);
-  refreshConfBar(DB.filter(d=>d.area===curArea));
+  container.appendChild(row);refreshConfBar(DB.filter(d=>d.area===curArea));
 }
 function removeNewDataRow(id) {
-  document.getElementById(`nd-${id}`)?.remove();
-  newDataRows=newDataRows.filter(x=>x!==id);
-  if(!newDataRows.length) document.getElementById('new-data-rows').innerHTML=`<div data-placeholder style="padding:12px 14px;text-align:center;color:var(--text-muted);font-size:12px">Klik "+ Tambah Baris"</div>`;
+  document.getElementById(`nd-${id}`)?.remove();newDataRows=newDataRows.filter(x=>x!==id);
+  if(!newDataRows.length)document.getElementById('new-data-rows').innerHTML=`<div data-placeholder style="padding:12px 14px;text-align:center;color:var(--text-muted);font-size:12px">Klik "+ Tambah Baris"</div>`;
   refreshConfBar(DB.filter(d=>d.area===curArea));
 }
 function getNewDataValues() {
@@ -419,33 +533,32 @@ function getNewDataValues() {
 }
 
 function addTambahanRow() {
-  const id=++tbCounter; tambahanRows.push(id);
+  const id=++tbCounter;tambahanRows.push(id);
   const container=document.getElementById('tambahan-rows');
   container.querySelector('.empty-tambahan')?.remove();
-  const row=document.createElement('div'); row.className='tambahan-row'; row.id=`tb-${id}`;
+  const row=document.createElement('div');row.className='tambahan-row';row.id=`tb-${id}`;
   row.innerHTML=`<input type="text" id="tb-inv-${id}" placeholder="No. Inventaris"><input type="text" id="tb-imei-${id}" placeholder="IMEI"><input type="text" id="tb-sim-${id}" placeholder="SIM Card"><input type="text" id="tb-sls-${id}" placeholder="SLS No."><input type="text" id="tb-nama-${id}" placeholder="Nama Salesman"><input type="text" id="tb-note-${id}" placeholder="Catatan..."><button class="btn-del-row" onclick="removeTambahanRow(${id})">✕</button>`;
-  container.appendChild(row);
-  updateTambahanCount(); refreshConfBar(DB.filter(d=>d.area===curArea));
+  container.appendChild(row);updateTambahanCount();refreshConfBar(DB.filter(d=>d.area===curArea));
 }
 function removeTambahanRow(id) {
-  document.getElementById(`tb-${id}`)?.remove();
-  tambahanRows=tambahanRows.filter(x=>x!==id);
-  if(!tambahanRows.length) document.getElementById('tambahan-rows').innerHTML=`<div class="empty-tambahan">Belum ada aset tambahan. Klik <strong>+ Tambah Aset</strong>.</div>`;
-  updateTambahanCount(); refreshConfBar(DB.filter(d=>d.area===curArea));
+  document.getElementById(`tb-${id}`)?.remove();tambahanRows=tambahanRows.filter(x=>x!==id);
+  if(!tambahanRows.length)document.getElementById('tambahan-rows').innerHTML=`<div class="empty-tambahan">Belum ada aset tambahan. Klik <strong>+ Tambah Aset</strong>.</div>`;
+  updateTambahanCount();refreshConfBar(DB.filter(d=>d.area===curArea));
 }
 function getTambahanValues() {
   return tambahanRows.map(id=>({no_inv:document.getElementById(`tb-inv-${id}`)?.value||'',imei:document.getElementById(`tb-imei-${id}`)?.value||'',sim:document.getElementById(`tb-sim-${id}`)?.value||'',slsno:document.getElementById(`tb-sls-${id}`)?.value||'',nama:document.getElementById(`tb-nama-${id}`)?.value||'',note:document.getElementById(`tb-note-${id}`)?.value||''})).filter(r=>r.no_inv||r.imei);
 }
 function updateTambahanCount() {
   const cnt=tambahanRows.length;
-  const el=document.getElementById('cnt-tambahan'); el.textContent=`${cnt} item`; el.style.display='inline-block';
+  document.getElementById('cnt-tambahan').textContent=`${cnt} item`;
+  document.getElementById('cnt-tambahan').style.display='inline-block';
   document.getElementById('s-tambahan').textContent=cnt;
 }
 
 function refreshStats(rows) {
   const total=rows.length,ada=rows.filter(d=>vData[d.id]?.status==='ada').length,tidak=rows.filter(d=>vData[d.id]?.status==='tidak').length;
-  document.getElementById('s-total').textContent=total; document.getElementById('s-ada').textContent=ada;
-  document.getElementById('s-tidak').textContent=tidak; document.getElementById('s-belum').textContent=total-ada-tidak;
+  document.getElementById('s-total').textContent=total;document.getElementById('s-ada').textContent=ada;
+  document.getElementById('s-tidak').textContent=tidak;document.getElementById('s-belum').textContent=total-ada-tidak;
   document.getElementById('prog-fill').style.width=(total?Math.round((ada+tidak)/total*100):0)+'%';
   document.getElementById('stats-area').style.display='block';
 }
@@ -454,23 +567,11 @@ function refreshConfBar(rows) {
   const total=rows.length,ada=rows.filter(d=>vData[d.id]?.status==='ada').length,tidak=rows.filter(d=>vData[d.id]?.status==='tidak').length;
   document.getElementById('cb-area').textContent=curArea;
   document.getElementById('cb-hoa').textContent=document.getElementById('nm-hoa').value||'—';
-  document.getElementById('cb-total').textContent=total; document.getElementById('cb-ada').textContent=ada;
-  document.getElementById('cb-tidak').textContent=tidak; document.getElementById('cb-belum').textContent=total-ada-tidak;
+  document.getElementById('cb-total').textContent=total;document.getElementById('cb-ada').textContent=ada;
+  document.getElementById('cb-tidak').textContent=tidak;document.getElementById('cb-belum').textContent=total-ada-tidak;
   document.getElementById('cb-tambahan').textContent=tambahanRows.length;
   document.getElementById('cb-newdata').textContent=newDataRows.length;
 }
-
-const SHAREPOINT_SITE = 'https://cimoryindonesia.sharepoint.com/sites/asset';
-async function getDigestToken() {
-  const res = await fetch(`${SHAREPOINT_SITE}/_api/contextinfo`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Accept': 'application/json;odata=verbose' }
-  });
-  const data = await res.json();
-  return data.d.GetContextWebInformation.FormDigestValue;
-}
-const SHAREPOINT_LIST = 'VerifikasiAsetHP';
 
 async function doSave() {
   const hoa=document.getElementById('nm-hoa').value;
@@ -478,134 +579,69 @@ async function doSave() {
   if(!curArea){toast('Pilih area terlebih dahulu','err');return;}
   const rows=DB.filter(d=>d.area===curArea);
   const belum=rows.filter(d=>!vData[d.id]?.status).length;
-  if(belum>0 && !confirm(`⚠️ Masih ada ${belum} item belum dicek.\nLanjutkan simpan?`)) return;
+  if(belum>0&&!confirm(`⚠️ Masih ada ${belum} item belum dicek.\nLanjutkan simpan?`))return;
 
   const tanggal=document.getElementById('nm-tanggal').value;
   const ts=new Date().toLocaleString('id-ID');
-
-  const payload = {
-    area: curArea,
-    hoa: hoa,
-    tanggal: tanggal,
-    timestamp: ts,
-    aset_terdaftar: rows.map(d=>({
-      no_inventaris: d.no_inv,
-      imei: d.imei,
-      sim_card: d.sim,
-      slsno: d.slsno,
-      status: vData[d.id]?.status==='ada'?'ADA':vData[d.id]?.status==='tidak'?'TIDAK ADA':'BELUM DICEK',
-      note: vData[d.id]?.note||''
-    })),
-    new_data: getNewDataValues(),
-    aset_tambahan: getTambahanValues()
-  };
-
-  const btn=document.querySelector('.btn-save');
-  btn.disabled=true; btn.textContent='⏳ Menyimpan...';
+  const btn=document.getElementById('btn-save');
+  btn.disabled=true;btn.textContent='⏳ Menyimpan...';
+  showLoading('Menyimpan data ke SharePoint...');
 
   try {
-    // Kirim setiap baris aset ke SharePoint List pakai MSAL token
-    const listUrl = `${SHAREPOINT_SITE}/_api/web/lists/getbytitle('${SHAREPOINT_LIST}')/items`;
-    const token = await getToken();
-    
-    const allItems = [
-      ...payload.aset_terdaftar.map(d => ({
-        Title: d.no_inventaris,
-        AREA: payload.area,
-        NAMA_HOA: payload.hoa,
-        TANGGAL: payload.tanggal,
-        NO_INVENTARIS: d.no_inventaris,
-        IMEI: d.imei,
-        SIM_CARD: d.sim_card,
-        SLSNO: d.slsno,
-        STATUS: d.status,
-        CATATAN: d.note,
-        TIPE: 'TERDAFTAR',
-        TIMESTAMP: payload.timestamp
+    const token=await getToken();
+    const listUrl=`${SP_SITE}/_api/web/lists/getbytitle('${SP_LIST}')/items`;
+    const headers={
+      'Accept':'application/json;odata=verbose',
+      'Content-Type':'application/json;odata=verbose',
+      'Authorization':`Bearer ${token}`
+    };
+
+    const allItems=[
+      ...rows.map(d=>({
+        Title:d.no_inv,AREA:curArea,NAMA_HOA:hoa,TANGGAL:tanggal,TIMESTAMP:ts,
+        NO_INVENTARIS:d.no_inv,IMEI:d.imei,SIM_CARD:d.sim,SLSNO:d.slsno,
+        STATUS:vData[d.id]?.status==='ada'?'ADA':vData[d.id]?.status==='tidak'?'TIDAK ADA':'BELUM DICEK',
+        CATATAN:vData[d.id]?.note||'',TIPE:'TERDAFTAR'
       })),
-      ...payload.new_data.map(d => ({
-        Title: d.no_inv||'NEW',
-        AREA: payload.area,
-        NAMA_HOA: payload.hoa,
-        TANGGAL: payload.tanggal,
-        NO_INVENTARIS: d.no_inv,
-        IMEI: '',
-        SIM_CARD: d.sim,
-        SLSNO: d.slsno,
-        STATUS: 'NEW DATA',
-        CATATAN: d.note,
-        TIPE: 'NEW DATA',
-        TIMESTAMP: payload.timestamp
-      })),
-      ...payload.aset_tambahan.map(d => ({
-        Title: d.no_inv||'TAMBAHAN',
-        AREA: payload.area,
-        NAMA_HOA: payload.hoa,
-        TANGGAL: payload.tanggal,
-        NO_INVENTARIS: d.no_inv,
-        IMEI: d.imei,
-        SIM_CARD: d.sim,
-        SLSNO: d.slsno,
-        STATUS: 'TAMBAHAN',
-        CATATAN: d.note,
-        TIPE: 'ASET TAMBAHAN',
-        TIMESTAMP: payload.timestamp
-      }))
+      ...getNewDataValues().map(d=>({Title:d.no_inv||'NEW',AREA:curArea,NAMA_HOA:hoa,TANGGAL:tanggal,TIMESTAMP:ts,NO_INVENTARIS:d.no_inv,IMEI:'',SIM_CARD:d.sim,SLSNO:d.slsno,STATUS:'NEW DATA',CATATAN:d.note,TIPE:'NEW DATA'})),
+      ...getTambahanValues().map(d=>({Title:d.no_inv||'TAMBAHAN',AREA:curArea,NAMA_HOA:hoa,TANGGAL:tanggal,TIMESTAMP:ts,NO_INVENTARIS:d.no_inv,IMEI:d.imei,SIM_CARD:d.sim,SLSNO:d.slsno,STATUS:'TAMBAHAN',CATATAN:d.note,TIPE:'ASET TAMBAHAN'}))
     ];
 
-    let successCount = 0;
-    for (const item of allItems) {
-      const res = await fetch(listUrl, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json;odata=verbose',
-          'Content-Type': 'application/json;odata=verbose',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ __metadata: { type: `SP.Data.VerifikasiAsetHPListItem` }, ...item })
-      });
-      if (res.ok) successCount++;
+    let ok=0;
+    for(const item of allItems){
+      const res=await fetch(listUrl,{method:'POST',headers,body:JSON.stringify({__metadata:{type:'SP.Data.VerifikasiAsetHPListItem'},...item})});
+      if(res.ok)ok++;
     }
-    toast(`✅ ${successCount} data ${curArea} berhasil disimpan ke SharePoint!`);
+    toast(`✅ ${ok} data ${curArea} berhasil disimpan ke SharePoint!`);
   } catch(e) {
-    toast('Gagal simpan: ' + e.message, 'err');
+    toast('Gagal simpan: '+e.message,'err');
   } finally {
-    btn.disabled=false; btn.textContent='💾 Simpan ke SharePoint';
+    hideLoading();btn.disabled=false;btn.textContent='💾 Simpan ke SharePoint';
   }
 }
 
-function toast(msg,type='') {
-  const c=document.getElementById('toasts'),t=document.createElement('div');
-  t.className='toast'+(type?' '+type:''); t.textContent=msg;
-  c.appendChild(t); setTimeout(()=>t.remove(),5000);
+function exportExcel() {
+  if(!curArea){toast('Pilih area dulu','err');return;}
+  const hoa=document.getElementById('nm-hoa').value,tanggal=document.getElementById('nm-tanggal').value;
+  const rows=DB.filter(d=>d.area===curArea);
+  const wb=XLSX.utils.book_new();
+  const s1=[['VERIFIKASI ASET HP SALESMAN - '+curArea],['HOA:'+(hoa||'—'),'Tanggal:'+tanggal,'Dicetak:'+new Date().toLocaleString('id-ID')],[],
+    ['No','No Inventaris','IMEI','SIM Card','SLS No.','Region','Entity','Branch','Area','Status','Catatan'],
+    ...rows.map((d,i)=>[i+1,d.no_inv,d.imei,d.sim,d.slsno,d.region,d.entity,d.branch,d.area,vData[d.id]?.status==='ada'?'ADA':vData[d.id]?.status==='tidak'?'TIDAK ADA':'BELUM DICEK',vData[d.id]?.note||''])];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s1),'Aset Terdaftar');
+  const ndVals=getNewDataValues();
+  const s2=[['NEW DATA'],['Area:'+curArea,'HOA:'+(hoa||'—'),'Tanggal:'+tanggal],[],['No','No Inventaris / IMEI','SIM Card','SLS No.','Nama Salesman','Catatan'],...(ndVals.length?ndVals.map((r,i)=>[i+1,r.no_inv,r.sim,r.slsno,r.nama,r.note]):[['(Tidak ada)']])];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s2),'New Data');
+  const tbVals=getTambahanValues();
+  const s3=[['ASET TAMBAHAN'],['Area:'+curArea,'HOA:'+(hoa||'—'),'Tanggal:'+tanggal],[],['No','No Inventaris','IMEI','SIM Card','SLS No.','Nama Salesman','Catatan'],...(tbVals.length?tbVals.map((r,i)=>[i+1,r.no_inv,r.imei,r.sim,r.slsno,r.nama,r.note]):[['(Tidak ada)']])];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s3),'Aset Tambahan');
+  XLSX.writeFile(wb,`Verifikasi_${curArea}_${hoa.replace(/\s+/g,'_')}_${tanggal}.xlsx`);
+  toast('📊 File Excel berhasil diunduh!');
 }
-</script>
 
-<!-- LOAD MASTER DATA SECTION — letakkan di atas filter -->
-<script>
-// Inject tombol load master data setelah DOM ready
-document.addEventListener('DOMContentLoaded', () => {
-  const filterCard = document.querySelector('.card');
-  const loadSection = document.createElement('div');
-  loadSection.className = 'card';
-  loadSection.style.marginBottom = '16px';
-  loadSection.innerHTML = `
-    <div class="card-head"><span>📂</span><h2>Load Data Master HP</h2></div>
-    <div class="card-body">
-      <div class="form-row" style="align-items:center">
-        <div>
-          <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-mid);display:block;margin-bottom:6px">File master_data_hp.xlsx</label>
-          <label style="display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 16px;background:var(--accent);color:#fff;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">
-            📂 Pilih File Excel
-            <input type="file" accept=".xlsx,.xls" onchange="loadMasterFile(this)" style="display:none">
-          </label>
-        </div>
-        <div style="font-size:13px;font-weight:500;" id="master-status" style="color:var(--text-muted)">Belum ada file dimuat — download dari SharePoint lalu pilih di sini</div>
-      </div>
-    </div>
-  `;
-  filterCard.parentNode.insertBefore(loadSection, filterCard);
-});
+function showLoading(text='Memuat...'){document.getElementById('loading-text').textContent=text;document.getElementById('loading-overlay').classList.add('show');}
+function hideLoading(){document.getElementById('loading-overlay').classList.remove('show');}
+function toast(msg,type=''){const c=document.getElementById('toasts'),t=document.createElement('div');t.className='toast'+(type?' '+type:'');t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),5000);}
 </script>
 </body>
 </html>
