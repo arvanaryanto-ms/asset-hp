@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verifikasi Aset HP Salesman</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --bg:#f0f2f5; --white:#fff; --surface:#f8f9fa; --border:#e2e8f0; --border-dark:#cbd5e1;
+  --accent:#0ea5e9; --accent-dark:#0284c7; --success:#16a34a; --success-bg:#dcfce7;
+  --success-border:#86efac; --danger:#dc2626; --danger-bg:#fee2e2; --danger-border:#fca5a5;
+  --warning:#d97706; --warning-bg:#fef3c7; --purple:#7c3aed; --purple-bg:#ede9fe;
+  --purple-border:#c4b5fd; --text:#1e293b; --text-mid:#475569; --text-muted:#94a3b8;
+  --radius:8px; --shadow:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:130px;}
+
+.header{background:#1e3a5f;padding:0 28px;display:flex;align-items:center;gap:14px;height:60px;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,0.2);}
+.header-logo{width:34px;height:34px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.header-title{font-size:15px;font-weight:700;color:#fff;}
+.header-sub{font-size:11px;color:rgba(255,255,255,0.5);}
+.header-date{margin-left:auto;font-size:12px;color:rgba(255,255,255,0.6);font-weight:500;}
+
+.page{max-width:1400px;margin:0 auto;padding:20px;}
+
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;}
+.card-head{padding:13px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.card-head h2{font-size:13px;font-weight:700;}
+.badge-cnt{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;display:none;}
+.badge-blue{background:var(--accent);color:#fff;}
+.badge-purple{background:var(--purple);color:#fff;}
+.card-body{padding:16px 20px;}
+
+.form-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-mid);}
+.form-control{height:36px;padding:0 12px;border:1.5px solid var(--border-dark);border-radius:6px;font-family:inherit;font-size:13px;color:var(--text);background:var(--white);transition:border-color 0.15s,box-shadow 0.15s;min-width:160px;}
+.form-control:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(14,165,233,0.12);}
+.form-control[readonly]{background:#f8fafc;color:var(--text-muted);cursor:default;}
+select.form-control{appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;}
+
+.btn{height:36px;padding:0 16px;border-radius:6px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;white-space:nowrap;}
+.btn-blue{background:var(--accent);color:#fff;}
+.btn-blue:hover{background:var(--accent-dark);}
+.btn-outline{background:var(--white);color:var(--text-mid);border:1.5px solid var(--border-dark);}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);}
+.btn-green-soft{background:var(--success-bg);color:var(--success);border:1.5px solid var(--success-border);}
+.btn-green-soft:hover{background:#bbf7d0;}
+.btn-red-soft{background:var(--danger-bg);color:var(--danger);border:1.5px solid var(--danger-border);}
+.btn-red-soft:hover{background:#fecaca;}
+.btn-purple{background:var(--purple-bg);color:var(--purple);border:1.5px solid var(--purple-border);}
+.btn-purple:hover{background:#ddd6fe;}
+
+.stats-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+.stat-box{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:10px 18px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);}
+.stat-icon{font-size:22px;}
+.stat-label{font-size:11px;color:var(--text-muted);font-weight:500;}
+.stat-val{font-size:22px;font-weight:800;line-height:1.1;}
+.v-blue{color:var(--accent);}.v-green{color:var(--success);}.v-red{color:var(--danger);}.v-orange{color:var(--warning);}.v-purple{color:var(--purple);}
+
+.prog-wrap{background:#e2e8f0;border-radius:4px;height:5px;margin-bottom:14px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--success));transition:width 0.4s;}
+
+.tbl-actions{display:flex;align-items:center;gap:8px;margin-left:auto;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead tr{background:#f8fafc;border-bottom:2px solid #e2e8f0;}
+th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-muted);white-space:nowrap;}
+th.center{text-align:center;}
+tbody tr{border-bottom:1px solid #f1f5f9;transition:background 0.1s;}
+tbody tr:last-child{border-bottom:none;}
+td{padding:10px 14px;vertical-align:middle;}
+.mono{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--text-mid);}
+.pill{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;}
+.pill-blue{background:#dbeafe;color:#1d4ed8;}
+
+.status-cell{display:flex;gap:6px;justify-content:center;}
+.s-btn{width:38px;height:32px;border-radius:6px;border:2px solid var(--border-dark);background:var(--surface);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
+.s-btn:hover{transform:scale(1.08);}
+.s-btn.on-ada{border-color:var(--success);background:var(--success-bg);box-shadow:0 0 0 1px var(--success-border);}
+.s-btn.on-tidak{border-color:var(--danger);background:var(--danger-bg);box-shadow:0 0 0 1px var(--danger-border);}
+tr.hl-ada{background:#f0fdf4 !important;}
+tr.hl-tidak{background:#fff5f5 !important;}
+
+.note-ta{width:100%;min-width:180px;padding:6px 10px;border-radius:6px;border:1.5px solid var(--border);font-family:inherit;font-size:12px;color:var(--text);resize:none;height:32px;overflow:hidden;transition:all 0.15s;background:var(--surface);}
+.note-ta:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(14,165,233,0.1);height:60px;background:#fff;}
+
+.new-data-area{padding:12px 20px 16px;}
+.new-data-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:8px;align-items:center;background:#fafafa;border:1px dashed var(--border-dark);border-radius:8px;padding:10px 14px;margin-bottom:8px;animation:fadeIn 0.2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.new-data-row input{height:32px;padding:0 10px;border-radius:6px;border:1.5px solid var(--border-dark);font-family:inherit;font-size:12px;color:var(--text);background:#fff;transition:border-color 0.15s;}
+.new-data-row input:focus{outline:none;border-color:var(--danger);}
+.new-data-row input::placeholder{color:var(--text-muted);}
+.new-data-header{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:8px;padding:0 14px;margin-bottom:6px;}
+.new-data-header span{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);}
+.btn-del-row{width:32px;height:32px;border-radius:6px;border:none;background:var(--danger-bg);color:var(--danger);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.15s;flex-shrink:0;}
+.btn-del-row:hover{background:#fecaca;}
+
+.card-purple .card-head{background:#faf5ff;border-bottom-color:var(--purple-border);}
+.tambahan-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr auto;gap:8px;align-items:center;background:#faf5ff;border:1px dashed var(--purple-border);border-radius:8px;padding:10px 14px;margin-bottom:8px;animation:fadeIn 0.2s ease;}
+.tambahan-row input{height:32px;padding:0 10px;border-radius:6px;border:1.5px solid var(--purple-border);font-family:inherit;font-size:12px;color:var(--text);background:#fff;}
+.tambahan-row input:focus{outline:none;border-color:var(--purple);}
+.tambahan-row input::placeholder{color:var(--text-muted);}
+.tambahan-header{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr auto;gap:8px;padding:0 14px;margin-bottom:6px;}
+.tambahan-header span{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--purple);}
+.empty-tambahan{padding:20px;text-align:center;color:var(--text-muted);font-size:13px;}
+
+.empty{padding:60px 20px;text-align:center;color:var(--text-muted);}
+.empty .ei{font-size:48px;margin-bottom:10px;}
+.empty p{font-size:14px;}
+
+.user-strip{background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 20px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-bottom:16px;box-shadow:var(--shadow);}
+.user-strip .ul{font-size:11px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:3px;}
+.user-input{border:none;border-bottom:1.5px solid #fcd34d;background:transparent;font-family:inherit;font-size:13px;font-weight:600;color:var(--text);padding:2px 4px;min-width:140px;}
+.user-input:focus{outline:none;border-color:#f59e0b;}
+
+.confirm-bar{position:fixed;bottom:0;left:0;right:0;z-index:300;background:#1e3a5f;border-top:3px solid var(--accent);padding:12px 28px;display:none;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 -4px 20px rgba(0,0,0,0.18);}
+.confirm-bar.show{display:flex;}
+.cb-label{font-size:12px;font-weight:700;color:rgba(255,255,255,0.9);letter-spacing:0.5px;white-space:nowrap;}
+.cb-items{display:flex;gap:6px;flex-wrap:wrap;align-items:center;flex:1;}
+.cb-chip{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:6px 14px;display:flex;flex-direction:column;align-items:center;gap:1px;}
+.cb-chip .cl{font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;}
+.cb-chip .cv{font-size:16px;font-weight:800;color:#fff;}
+.cv-green{color:#4ade80 !important;}.cv-red{color:#f87171 !important;}.cv-orange{color:#fbbf24 !important;}.cv-purple{color:#c4b5fd !important;}
+.cb-actions{display:flex;gap:8px;align-items:center;}
+.btn-save{height:44px;padding:0 28px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all 0.15s;}
+.btn-save:hover{background:#38bdf8;box-shadow:0 4px 14px rgba(14,165,233,0.4);transform:translateY(-1px);}
+
+.toasts{position:fixed;bottom:80px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px;}
+.toast{background:#1e293b;color:#fff;padding:11px 16px;border-radius:8px;font-size:13px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.2);border-left:4px solid var(--accent);animation:tIn 0.3s ease;max-width:340px;}
+.toast.err{border-left-color:var(--danger);}
+@keyframes tIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">📱</div>
+  <div>
+    <div class="header-title">Form Verifikasi Aset HP Salesman</div>
+    <div class="header-sub">Asset Management · MS Distribution</div>
+  </div>
+  <div class="header-date" id="hdr-date"></div>
+</div>
+
+<div class="page">
+
+  <div class="user-strip">
+    <div>
+      <span class="ul">Nama HOA</span>
+      <input class="user-input" id="nm-hoa" type="text" placeholder="Tulis nama HOA...">
+    </div>
+    <div>
+      <span class="ul">Tanggal Pengecekan</span>
+      <input class="user-input" id="nm-tanggal" type="date">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><span>🔍</span><h2>Filter Data Aset</h2></div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Kode Area *</label>
+          <select class="form-control" id="f-area" onchange="onAreaChange()">
+            <option value="">— Pilih Area —</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Region</label><input class="form-control" id="f-region" readonly placeholder="Otomatis"></div>
+        <div class="form-group"><label>Entity</label><input class="form-control" id="f-entity" readonly placeholder="Otomatis"></div>
+        <div class="form-group"><label>Branch</label><input class="form-control" id="f-branch" readonly placeholder="Otomatis"></div>
+        <div class="form-group" style="flex-direction:row;gap:8px">
+          <button class="btn btn-blue" onclick="applyFilter()">▶ Tampilkan Data</button>
+          <button class="btn btn-outline" onclick="resetAll()">↩ Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="stats-area" style="display:none">
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-icon">📋</div><div><div class="stat-label">Total Aset Terdaftar</div><div class="stat-val v-blue" id="s-total">0</div></div></div>
+      <div class="stat-box"><div class="stat-icon">✅</div><div><div class="stat-label">Ada</div><div class="stat-val v-green" id="s-ada">0</div></div></div>
+      <div class="stat-box"><div class="stat-icon">❌</div><div><div class="stat-label">Tidak Ada</div><div class="stat-val v-red" id="s-tidak">0</div></div></div>
+      <div class="stat-box"><div class="stat-icon">⏳</div><div><div class="stat-label">Belum Dicek</div><div class="stat-val v-orange" id="s-belum">0</div></div></div>
+      <div class="stat-box"><div class="stat-icon">➕</div><div><div class="stat-label">Aset Tambahan</div><div class="stat-val v-purple" id="s-tambahan">0</div></div></div>
+    </div>
+    <div class="prog-wrap"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <span>📋</span><h2 id="tbl-title">Data Aset Terdaftar</h2>
+      <span class="badge-cnt badge-blue" id="tbl-cnt"></span>
+      <div class="tbl-actions" id="tbl-actions" style="display:none">
+        <button class="btn btn-green-soft" onclick="bulkStatus('ada')">✓ Semua Ada</button>
+        <button class="btn btn-red-soft" onclick="bulkStatus('tidak')">✗ Semua Tidak Ada</button>
+      </div>
+    </div>
+    <div id="tbl-body">
+      <div class="empty"><div class="ei">🗂️</div><p>Pilih <strong>Kode Area</strong> lalu klik <strong>Tampilkan Data</strong></p></div>
+    </div>
+    <div id="new-data-section" style="display:none">
+      <div style="padding:12px 20px 4px;border-top:2px dashed #e2e8f0;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:13px;font-weight:700;color:var(--danger)">⚠️ New Data</span>
+        <span style="font-size:12px;color:var(--text-muted)">Aset ditemukan tapi tidak terdaftar di sistem</span>
+        <button class="btn btn-red-soft" style="margin-left:auto;height:30px;padding:0 12px;font-size:12px" onclick="addNewDataRow()">+ Tambah Baris</button>
+      </div>
+      <div class="new-data-area">
+        <div class="new-data-header"><span>No. Inventaris / IMEI</span><span>SIM Card</span><span>SLS No.</span><span>Nama Salesman</span><span>Catatan</span><span></span></div>
+        <div id="new-data-rows"><div data-placeholder style="padding:12px 14px;text-align:center;color:var(--text-muted);font-size:12px">Klik "+ Tambah Baris" untuk menambah aset tidak terdaftar</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card card-purple" id="card-tambahan" style="display:none">
+    <div class="card-head">
+      <span>➕</span><h2>Aset Tambahan</h2>
+      <span class="badge-cnt badge-purple" id="cnt-tambahan">0 item</span>
+      <span style="font-size:11px;color:var(--purple);margin-left:4px;font-style:italic">— tidak masuk total aset terdaftar</span>
+      <div style="margin-left:auto"><button class="btn btn-purple" onclick="addTambahanRow()">+ Tambah Aset</button></div>
+    </div>
+    <div class="card-body" style="padding:12px 20px">
+      <div class="tambahan-header"><span>No. Inventaris</span><span>IMEI</span><span>SIM Card</span><span>SLS No.</span><span>Nama Salesman</span><span>Catatan</span><span></span></div>
+      <div id="tambahan-rows"><div class="empty-tambahan">Belum ada aset tambahan. Klik <strong>+ Tambah Aset</strong>.</div></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="confirm-bar" id="confirm-bar">
+  <div class="cb-label">KONFIRMASI &amp; SIMPAN</div>
+  <div class="cb-items">
+    <div class="cb-chip"><span class="cl">Area</span><span class="cv" id="cb-area" style="font-size:13px">—</span></div>
+    <div class="cb-chip"><span class="cl">HOA</span><span class="cv" id="cb-hoa" style="font-size:13px">—</span></div>
+    <div class="cb-chip"><span class="cl">Total</span><span class="cv" id="cb-total">0</span></div>
+    <div class="cb-chip"><span class="cl">Ada ✓</span><span class="cv cv-green" id="cb-ada">0</span></div>
+    <div class="cb-chip"><span class="cl">Tidak Ada ✗</span><span class="cv cv-red" id="cb-tidak">0</span></div>
+    <div class="cb-chip"><span class="cl">Belum Dicek</span><span class="cv cv-orange" id="cb-belum">0</span></div>
+    <div class="cb-chip"><span class="cl">Tambahan</span><span class="cv cv-purple" id="cb-tambahan">0</span></div>
+    <div class="cb-chip"><span class="cl">New Data</span><span class="cv cv-red" id="cb-newdata">0</span></div>
+  </div>
+  <div class="cb-actions">
+    <button class="btn-save" onclick="doSave()">💾 Simpan ke SharePoint</button>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+// ── DATA MASTER (diambil dari master_data_hp.xlsx yang diupload) ──
+// Untuk load dari file Excel lokal, gunakan tombol di bawah
+// Atau isi manual data di sini sebagai fallback
+
+let DB = [];
+let vData = {};
+let curArea = '';
+let newDataRows = [], tambahanRows = [];
+let ndCounter = 0, tbCounter = 0;
+
+window.addEventListener('DOMContentLoaded', () => {
+  const now = new Date();
+  document.getElementById('hdr-date').textContent =
+    now.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('nm-tanggal').value = now.toISOString().split('T')[0];
+});
+
+// ── LOAD MASTER DATA dari file Excel lokal ──
+function loadMasterFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+      DB = rows.map((r, i) => ({
+        id: i + 1,
+        principle: r['PRINCIPLE'] || '',
+        no_inv:    r['NO_INVENTARIS'] || '',
+        imei:      r['IMEI'] || '',
+        sim:       String(r['SIM_CARD'] || ''),
+        slsno:     r['SLSNO'] || '',
+        region:    r['REGION'] || '',
+        entity:    r['ENTITY'] || '',
+        branch:    r['BRANCH'] || '',
+        area:      String(r['AREA'] || '').toUpperCase(),
+      })).filter(r => r.area);
+
+      const areas = [...new Set(DB.map(d=>d.area))].sort();
+      const sel = document.getElementById('f-area');
+      sel.innerHTML = '<option value="">— Pilih Area —</option>';
+      areas.forEach(a => {
+        const o = document.createElement('option');
+        o.value=a; o.textContent=a; sel.appendChild(o);
+      });
+      document.getElementById('master-status').textContent = `✅ ${DB.length} data HP dimuat dari ${file.name}`;
+      document.getElementById('master-status').style.color = 'var(--success)';
+      toast(`✅ ${DB.length} data HP berhasil dimuat!`);
+    } catch(e) {
+      toast('Gagal baca file: ' + e.message, 'err');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function onAreaChange() {
+  const area = document.getElementById('f-area').value;
+  const row = DB.find(d=>d.area===area);
+  document.getElementById('f-region').value = row?.region||'';
+  document.getElementById('f-entity').value = row?.entity||'';
+  document.getElementById('f-branch').value = row?.branch||'';
+}
+
+function applyFilter() {
+  const area = document.getElementById('f-area').value;
+  if (!area) { toast('Pilih Kode Area terlebih dahulu!','err'); return; }
+  if (!DB.length) { toast('Load master data HP terlebih dahulu!','err'); return; }
+  curArea = area;
+  const rows = DB.filter(d=>d.area===area);
+  rows.forEach(d => { if (!vData[d.id]) vData[d.id]={status:null,note:''}; });
+  renderTable(rows);
+  refreshStats(rows);
+  refreshConfBar(rows);
+  document.getElementById('confirm-bar').classList.add('show');
+  document.getElementById('new-data-section').style.display='block';
+  document.getElementById('card-tambahan').style.display='block';
+}
+
+function resetAll() {
+  document.getElementById('f-area').value='';
+  ['f-region','f-entity','f-branch'].forEach(id=>document.getElementById(id).value='');
+  curArea='';
+  document.getElementById('tbl-body').innerHTML=`<div class="empty"><div class="ei">🗂️</div><p>Pilih <strong>Kode Area</strong> lalu klik <strong>Tampilkan Data</strong></p></div>`;
+  document.getElementById('tbl-title').textContent='Data Aset Terdaftar';
+  document.getElementById('tbl-cnt').style.display='none';
+  document.getElementById('tbl-actions').style.display='none';
+  document.getElementById('stats-area').style.display='none';
+  document.getElementById('confirm-bar').classList.remove('show');
+  document.getElementById('new-data-section').style.display='none';
+  document.getElementById('card-tambahan').style.display='none';
+}
+
+function renderTable(rows) {
+  document.getElementById('tbl-title').textContent=`Area: ${curArea} — Aset Terdaftar`;
+  const cnt=document.getElementById('tbl-cnt');
+  cnt.textContent=`${rows.length} unit`; cnt.style.display='inline-block';
+  document.getElementById('tbl-actions').style.display='flex';
+  if (!rows.length) { document.getElementById('tbl-body').innerHTML=`<div class="empty"><div class="ei">📭</div><p>Tidak ada data untuk area ini</p></div>`; return; }
+  let html=`<div class="table-wrap"><table><thead><tr>
+    <th style="width:40px">#</th><th style="min-width:175px">No. Inventaris</th>
+    <th style="min-width:155px">IMEI</th><th style="min-width:135px">SIM Card</th>
+    <th style="min-width:115px">SLS No.</th>
+    <th class="center" style="min-width:100px">Status HP</th>
+    <th style="min-width:220px">Catatan / Note</th>
+  </tr></thead><tbody>`;
+  rows.forEach((d,i)=>{
+    const v=vData[d.id];
+    const isAda=v?.status==='ada', isTidak=v?.status==='tidak';
+    html+=`<tr class="${isAda?'hl-ada':isTidak?'hl-tidak':''}" id="tr-${d.id}">
+      <td style="color:var(--text-muted);font-weight:600;font-size:12px">${i+1}</td>
+      <td><span class="mono">${d.no_inv}</span></td>
+      <td><span class="mono">${d.imei}</span></td>
+      <td><span class="mono">${d.sim}</span></td>
+      <td><span class="pill pill-blue">${d.slsno}</span></td>
+      <td><div class="status-cell">
+        <button class="s-btn ${isAda?'on-ada':''}" onclick="setStatus(${d.id},'ada')" title="Ada ✓">✓</button>
+        <button class="s-btn ${isTidak?'on-tidak':''}" onclick="setStatus(${d.id},'tidak')" title="Tidak Ada ✗">✗</button>
+      </div></td>
+      <td><textarea class="note-ta" id="note-${d.id}" placeholder="Catatan..." oninput="vData[${d.id}].note=this.value">${v?.note||''}</textarea></td>
+    </tr>`;
+  });
+  html+=`</tbody></table></div>`;
+  document.getElementById('tbl-body').innerHTML=html;
+}
+
+function setStatus(id,st) {
+  if(!vData[id]) vData[id]={status:null,note:''};
+  vData[id].status=vData[id].status===st?null:st;
+  const tr=document.getElementById(`tr-${id}`);
+  const btns=tr.querySelectorAll('.s-btn');
+  tr.className=vData[id].status==='ada'?'hl-ada':vData[id].status==='tidak'?'hl-tidak':'';
+  btns[0].className='s-btn'+(vData[id].status==='ada'?' on-ada':'');
+  btns[1].className='s-btn'+(vData[id].status==='tidak'?' on-tidak':'');
+  const rows=DB.filter(d=>d.area===curArea);
+  refreshStats(rows); refreshConfBar(rows);
+}
+
+function bulkStatus(st) {
+  DB.filter(d=>d.area===curArea).forEach(d=>{
+    if(!vData[d.id]) vData[d.id]={status:null,note:''};
+    vData[d.id].status=st;
+  });
+  applyFilter();
+}
+
+function addNewDataRow() {
+  const id=++ndCounter; newDataRows.push(id);
+  const container=document.getElementById('new-data-rows');
+  const ph=container.querySelector('[data-placeholder]'); if(ph) ph.remove();
+  const row=document.createElement('div'); row.className='new-data-row'; row.id=`nd-${id}`;
+  row.innerHTML=`<input type="text" id="nd-inv-${id}" placeholder="No. Inventaris / IMEI"><input type="text" id="nd-sim-${id}" placeholder="SIM Card"><input type="text" id="nd-sls-${id}" placeholder="SLS No."><input type="text" id="nd-nama-${id}" placeholder="Nama Salesman"><input type="text" id="nd-note-${id}" placeholder="Catatan..."><button class="btn-del-row" onclick="removeNewDataRow(${id})">✕</button>`;
+  container.appendChild(row);
+  refreshConfBar(DB.filter(d=>d.area===curArea));
+}
+function removeNewDataRow(id) {
+  document.getElementById(`nd-${id}`)?.remove();
+  newDataRows=newDataRows.filter(x=>x!==id);
+  if(!newDataRows.length) document.getElementById('new-data-rows').innerHTML=`<div data-placeholder style="padding:12px 14px;text-align:center;color:var(--text-muted);font-size:12px">Klik "+ Tambah Baris"</div>`;
+  refreshConfBar(DB.filter(d=>d.area===curArea));
+}
+function getNewDataValues() {
+  return newDataRows.map(id=>({no_inv:document.getElementById(`nd-inv-${id}`)?.value||'',sim:document.getElementById(`nd-sim-${id}`)?.value||'',slsno:document.getElementById(`nd-sls-${id}`)?.value||'',nama:document.getElementById(`nd-nama-${id}`)?.value||'',note:document.getElementById(`nd-note-${id}`)?.value||''})).filter(r=>r.no_inv||r.sim);
+}
+
+function addTambahanRow() {
+  const id=++tbCounter; tambahanRows.push(id);
+  const container=document.getElementById('tambahan-rows');
+  container.querySelector('.empty-tambahan')?.remove();
+  const row=document.createElement('div'); row.className='tambahan-row'; row.id=`tb-${id}`;
+  row.innerHTML=`<input type="text" id="tb-inv-${id}" placeholder="No. Inventaris"><input type="text" id="tb-imei-${id}" placeholder="IMEI"><input type="text" id="tb-sim-${id}" placeholder="SIM Card"><input type="text" id="tb-sls-${id}" placeholder="SLS No."><input type="text" id="tb-nama-${id}" placeholder="Nama Salesman"><input type="text" id="tb-note-${id}" placeholder="Catatan..."><button class="btn-del-row" onclick="removeTambahanRow(${id})">✕</button>`;
+  container.appendChild(row);
+  updateTambahanCount(); refreshConfBar(DB.filter(d=>d.area===curArea));
+}
+function removeTambahanRow(id) {
+  document.getElementById(`tb-${id}`)?.remove();
+  tambahanRows=tambahanRows.filter(x=>x!==id);
+  if(!tambahanRows.length) document.getElementById('tambahan-rows').innerHTML=`<div class="empty-tambahan">Belum ada aset tambahan. Klik <strong>+ Tambah Aset</strong>.</div>`;
+  updateTambahanCount(); refreshConfBar(DB.filter(d=>d.area===curArea));
+}
+function getTambahanValues() {
+  return tambahanRows.map(id=>({no_inv:document.getElementById(`tb-inv-${id}`)?.value||'',imei:document.getElementById(`tb-imei-${id}`)?.value||'',sim:document.getElementById(`tb-sim-${id}`)?.value||'',slsno:document.getElementById(`tb-sls-${id}`)?.value||'',nama:document.getElementById(`tb-nama-${id}`)?.value||'',note:document.getElementById(`tb-note-${id}`)?.value||''})).filter(r=>r.no_inv||r.imei);
+}
+function updateTambahanCount() {
+  const cnt=tambahanRows.length;
+  const el=document.getElementById('cnt-tambahan'); el.textContent=`${cnt} item`; el.style.display='inline-block';
+  document.getElementById('s-tambahan').textContent=cnt;
+}
+
+function refreshStats(rows) {
+  const total=rows.length,ada=rows.filter(d=>vData[d.id]?.status==='ada').length,tidak=rows.filter(d=>vData[d.id]?.status==='tidak').length;
+  document.getElementById('s-total').textContent=total; document.getElementById('s-ada').textContent=ada;
+  document.getElementById('s-tidak').textContent=tidak; document.getElementById('s-belum').textContent=total-ada-tidak;
+  document.getElementById('prog-fill').style.width=(total?Math.round((ada+tidak)/total*100):0)+'%';
+  document.getElementById('stats-area').style.display='block';
+}
+
+function refreshConfBar(rows) {
+  const total=rows.length,ada=rows.filter(d=>vData[d.id]?.status==='ada').length,tidak=rows.filter(d=>vData[d.id]?.status==='tidak').length;
+  document.getElementById('cb-area').textContent=curArea;
+  document.getElementById('cb-hoa').textContent=document.getElementById('nm-hoa').value||'—';
+  document.getElementById('cb-total').textContent=total; document.getElementById('cb-ada').textContent=ada;
+  document.getElementById('cb-tidak').textContent=tidak; document.getElementById('cb-belum').textContent=total-ada-tidak;
+  document.getElementById('cb-tambahan').textContent=tambahanRows.length;
+  document.getElementById('cb-newdata').textContent=newDataRows.length;
+}
+
+const POWER_AUTOMATE_URL = 'https://defaultca37334264ee46d795e8cc81024e96.82.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/395746e8edd44a44adc6d48667154aa8/triggers/manual/paths/invoke?api-version=1';
+
+async function doSave() {
+  const hoa=document.getElementById('nm-hoa').value;
+  if(!hoa){toast('Isi Nama HOA terlebih dahulu!','err');return;}
+  if(!curArea){toast('Pilih area terlebih dahulu','err');return;}
+  const rows=DB.filter(d=>d.area===curArea);
+  const belum=rows.filter(d=>!vData[d.id]?.status).length;
+  if(belum>0 && !confirm(`⚠️ Masih ada ${belum} item belum dicek.\nLanjutkan simpan?`)) return;
+
+  const tanggal=document.getElementById('nm-tanggal').value;
+  const ts=new Date().toLocaleString('id-ID');
+
+  const payload = {
+    area: curArea,
+    hoa: hoa,
+    tanggal: tanggal,
+    timestamp: ts,
+    aset_terdaftar: rows.map(d=>({
+      no_inventaris: d.no_inv,
+      imei: d.imei,
+      sim_card: d.sim,
+      slsno: d.slsno,
+      status: vData[d.id]?.status==='ada'?'ADA':vData[d.id]?.status==='tidak'?'TIDAK ADA':'BELUM DICEK',
+      note: vData[d.id]?.note||''
+    })),
+    new_data: getNewDataValues(),
+    aset_tambahan: getTambahanValues()
+  };
+
+  const btn=document.querySelector('.btn-save');
+  btn.disabled=true; btn.textContent='⏳ Menyimpan...';
+
+  try {
+    const res = await fetch(POWER_AUTOMATE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if(res.ok || res.status===202) {
+      toast(`✅ Data ${curArea} berhasil disimpan ke SharePoint!`);
+    } else {
+      throw new Error('Status: ' + res.status);
+    }
+  } catch(e) {
+    toast('Gagal simpan: ' + e.message, 'err');
+  } finally {
+    btn.disabled=false; btn.textContent='💾 Simpan ke SharePoint';
+  }
+}
+
+function toast(msg,type='') {
+  const c=document.getElementById('toasts'),t=document.createElement('div');
+  t.className='toast'+(type?' '+type:''); t.textContent=msg;
+  c.appendChild(t); setTimeout(()=>t.remove(),5000);
+}
+</script>
+
+<!-- LOAD MASTER DATA SECTION — letakkan di atas filter -->
+<script>
+// Inject tombol load master data setelah DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  const filterCard = document.querySelector('.card');
+  const loadSection = document.createElement('div');
+  loadSection.className = 'card';
+  loadSection.style.marginBottom = '16px';
+  loadSection.innerHTML = `
+    <div class="card-head"><span>📂</span><h2>Load Data Master HP</h2></div>
+    <div class="card-body">
+      <div class="form-row" style="align-items:center">
+        <div>
+          <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-mid);display:block;margin-bottom:6px">File master_data_hp.xlsx</label>
+          <label style="display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 16px;background:var(--accent);color:#fff;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">
+            📂 Pilih File Excel
+            <input type="file" accept=".xlsx,.xls" onchange="loadMasterFile(this)" style="display:none">
+          </label>
+        </div>
+        <div style="font-size:13px;font-weight:500;" id="master-status" style="color:var(--text-muted)">Belum ada file dimuat — download dari SharePoint lalu pilih di sini</div>
+      </div>
+    </div>
+  `;
+  filterCard.parentNode.insertBefore(loadSection, filterCard);
+});
+</script>
+</body>
+</html>
