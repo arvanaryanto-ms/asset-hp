@@ -609,10 +609,21 @@ async function doSave() {
 
     let ok=0, errMsg='';
     for(const item of allItems){
-      // Paksa semua nilai jadi string
-      const safeItem = {};
-      for(const k of Object.keys(item)) safeItem[k] = String(item[k]||'');
-      const body = {__metadata:{type:'SP.Data.VerifikasiAsetHPListItem'}, Title: safeItem.NO_INVENTARIS||'item', ...safeItem};
+      const body = {
+        __metadata: {type: 'SP.Data.VerifikasiAsetHPListItem'},
+        Title: String(item.NO_INVENTARIS||'item'),
+        AREA: String(item.AREA||''),
+        NAMA_HOA: String(item.NAMA_HOA||''),
+        TANGGAL: String(item.TANGGAL||''),
+        NO_INVENTARIS: String(item.NO_INVENTARIS||''),
+        IMEI: String(item.IMEI||''),
+        SIM_CARD: String(item.SIM_CARD||''),
+        SLSNO: String(item.SLSNO||''),
+        STATUS: String(item.STATUS||''),
+        CATATAN: String(item.CATATAN||''),
+        TIPE: String(item.TIPE||''),
+        TIMESTAMP: String(item.TIMESTAMP||'')
+      };
       const res=await fetch(listUrl,{method:'POST',headers,body:JSON.stringify(body)});
       if(res.ok){ ok++; } else {
         const errData = await res.text();
