@@ -227,7 +227,7 @@ tr.hl-tidak{background:#fff5f5 !important;}
     <div class="sukses-summary" id="sukses-summary"></div>
     <div class="sukses-locked">🔒 Form telah dikunci. Anda tidak dapat mengubah data ini kecuali melakukan revisi. Revisi hanya bisa dilakukan 1 kali.</div>
     <button class="btn-sukses-excel" onclick="exportExcel()">📊 Download Rekap Excel</button>
-    <button onclick="tutupSukses()" style="margin-top:10px;width:100%;height:40px;background:#f1f5f9;color:#475569;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">✕ Tutup</button>
+    <button onclick="doLogout()" style="margin-top:10px;width:100%;height:40px;background:#f1f5f9;color:#475569;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">🚪 Logout</button>
   </div>
 </div>
 
@@ -283,19 +283,10 @@ tr.hl-tidak{background:#fff5f5 !important;}
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-head"><span>📂</span><h2>Load Data Master HP</h2></div>
+  <div class="card" id="master-card">
+    <div class="card-head"><span>📂</span><h2>Status Data Master HP</h2></div>
     <div class="card-body">
-      <div class="form-row" style="align-items:center">
-        <div>
-          <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-mid);display:block;margin-bottom:6px">File master_data_hp.xlsx</label>
-          <label style="display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 16px;background:var(--accent);color:#fff;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">
-            📂 Pilih File Excel
-            <input type="file" accept=".xlsx,.xls" onchange="loadMasterFile(this)" style="display:none">
-          </label>
-        </div>
-        <div style="font-size:13px;font-weight:500;color:var(--text-muted)" id="master-status">Belum ada file dimuat</div>
-      </div>
+      <div style="font-size:13px;font-weight:500;color:var(--text-muted)" id="master-status">⏳ Memuat data master dari SharePoint...</div>
     </div>
   </div>
 
@@ -349,12 +340,39 @@ tr.hl-tidak{background:#fff5f5 !important;}
         <button class="btn btn-red-soft" style="margin-left:auto;height:30px;padding:0 12px;font-size:12px" onclick="addNewDataRow()">+ Tambah Baris</button>
       </div>
       <div class="new-data-area">
-        <div class="new-data-header"><span>No. Inventaris / IMEI</span><span>SIM Card</span><span>SLS No.</span><span>Nama Salesman</span><span>Catatan</span><span></span></div>
+        <div class="new-data-header"><span>NO_INVENTARIS</span><span>IMEI</span><span>SIM_CARD</span><span>SLSNO</span><span>CATATAN</span><span></span></div>
         <div id="new-data-rows"><div data-placeholder style="padding:12px 14px;text-align:center;color:var(--text-muted);font-size:12px">Klik "+ Tambah Baris"</div></div>
       </div>
     </div>
   </div>
 
+</div>
+
+<!-- ADMIN RESET SECTION (hidden for regular users) -->
+<div class="page" id="admin-reset-page">
+  <div class="card">
+    <div class="card-head">
+      <span>🛠️</span><h2>Admin — Reset Status Submit User</h2>
+      <span style="margin-left:auto;font-size:11px;color:var(--text-muted)">Hanya terlihat oleh Admin</span>
+    </div>
+    <div class="card-body">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Pilih area untuk melihat daftar user yang sudah submit. Reset akan menghapus SUBMIT_STATUS sehingga user bisa input ulang.</p>
+      <div class="form-row" style="margin-bottom:16px">
+        <div class="form-group">
+          <label>Pilih Area</label>
+          <select class="form-control" id="admin-reset-area" onchange="loadResetUsers()" style="min-width:200px">
+            <option value="">— Pilih Area —</option>
+          </select>
+        </div>
+        <div class="form-group" style="justify-content:flex-end">
+          <button class="btn btn-blue" onclick="loadResetUsers()">🔍 Cek User</button>
+        </div>
+      </div>
+      <div id="reset-users-container">
+        <div class="empty" style="padding:30px"><div class="ei">👥</div><p>Pilih area untuk melihat daftar user</p></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="confirm-bar" id="confirm-bar">
@@ -387,6 +405,7 @@ const SP_LIST     = 'VerifikasiAsetHP';
 const SCOPES      = ['https://cimoryindonesia.sharepoint.com/AllSites.Write'];
 const ADMIN_EMAIL = 'arvan.aryanto@cimory.com';
 const DASHBOARD_URL = 'dashboard.html';
+const MASTER_FILE_URL = 'https://cimoryindonesia.sharepoint.com/sites/asset/Shared%20Documents/Assets/DataHP/master_data_hp.xlsx';
 // ============================================================
 
 let msalApp = null, currentUser = null;
@@ -452,6 +471,12 @@ function goForm() {
   document.getElementById('nm-hoa-display').textContent = name;
   document.getElementById('nm-email-display').textContent = currentUser.username;
   document.getElementById('main-page').classList.add('show');
+  // Show admin reset page only for admin
+  if (isAdmin()) {
+    document.getElementById('admin-reset-page').classList.add('show');
+  }
+  // Auto-load master data from SharePoint
+  loadMasterFromSP();
 }
 
 async function doLogout() {
@@ -487,36 +512,47 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-function loadMasterFile(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const wb = XLSX.read(e.target.result, {type:'array'});
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
-      DB = rows.map((r,i) => ({
-        id: i+1,
-        no_inv: r['NO_INVENTARIS']||'',
-        imei:   r['IMEI']||'',
-        sim:    String(r['SIM_CARD']||''),
-        slsno:  r['SLSNO']||'',
-        region: r['REGION']||'',
-        entity: r['ENTITY']||'',
-        branch: r['BRANCH']||'',
-        area:   String(r['AREA']||'').toUpperCase(),
-      })).filter(r=>r.area);
-      const areas=[...new Set(DB.map(d=>d.area))].sort();
-      const sel=document.getElementById('f-area');
-      sel.innerHTML='<option value="">— Pilih Area —</option>';
-      areas.forEach(a=>{const o=document.createElement('option');o.value=a;o.textContent=a;sel.appendChild(o);});
-      document.getElementById('master-status').textContent=`✅ ${DB.length} data HP dimuat dari ${file.name}`;
-      document.getElementById('master-status').style.color='var(--success)';
-      toast(`✅ ${DB.length} data HP berhasil dimuat!`);
-    } catch(e) { toast('Gagal baca file: '+e.message,'err'); }
-  };
-  reader.readAsArrayBuffer(file);
+async function loadMasterFromSP() {
+  const statusEl = document.getElementById('master-status');
+  statusEl.textContent = '⏳ Memuat data master dari SharePoint...';
+  statusEl.style.color = 'var(--text-muted)';
+  try {
+    const token = await getToken();
+    const res = await fetch(MASTER_FILE_URL, {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const arrayBuffer = await res.arrayBuffer();
+    const wb = XLSX.read(arrayBuffer, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+    DB = rows.map((r, i) => ({
+      id: i + 1,
+      no_inv: r['NO_INVENTARIS'] || '',
+      imei:   r['IMEI'] || '',
+      sim:    String(r['SIM_CARD'] || ''),
+      slsno:  r['SLSNO'] || '',
+      region: r['REGION'] || '',
+      entity: r['ENTITY'] || '',
+      branch: r['BRANCH'] || '',
+      area:   String(r['AREA'] || '').toUpperCase(),
+    })).filter(r => r.area);
+    const areas = [...new Set(DB.map(d => d.area))].sort();
+    // Populate area dropdowns
+    ['f-area', 'admin-reset-area'].forEach(selId => {
+      const sel = document.getElementById(selId);
+      if (!sel) return;
+      sel.innerHTML = '<option value="">— Pilih Area —</option>';
+      areas.forEach(a => { const o = document.createElement('option'); o.value = a; o.textContent = a; sel.appendChild(o); });
+    });
+    statusEl.textContent = `✅ ${DB.length} data HP dimuat dari SharePoint`;
+    statusEl.style.color = 'var(--success)';
+    toast(`✅ ${DB.length} data HP berhasil dimuat!`);
+  } catch (e) {
+    statusEl.textContent = '❌ Gagal memuat master data: ' + e.message;
+    statusEl.style.color = 'var(--danger)';
+    toast('Gagal memuat master data: ' + e.message, 'err');
+  }
 }
 
 function onAreaChange() {
@@ -694,7 +730,7 @@ function addNewDataRow() {
   const container=document.getElementById('new-data-rows');
   container.querySelector('[data-placeholder]')?.remove();
   const row=document.createElement('div');row.className='new-data-row';row.id=`nd-${id}`;
-  row.innerHTML=`<input type="text" id="nd-inv-${id}" placeholder="No. Inventaris / IMEI"><input type="text" id="nd-sim-${id}" placeholder="SIM Card"><input type="text" id="nd-sls-${id}" placeholder="SLS No."><input type="text" id="nd-nama-${id}" placeholder="Nama Salesman"><input type="text" id="nd-note-${id}" placeholder="Catatan..."><button class="btn-del-row" onclick="removeNewDataRow(${id})">✕</button>`;
+  row.innerHTML=`<input type="text" id="nd-inv-${id}" placeholder="No. Inventaris"><input type="text" id="nd-imei-${id}" placeholder="IMEI"><input type="text" id="nd-sim-${id}" placeholder="SIM Card"><input type="text" id="nd-sls-${id}" placeholder="SLS No."><input type="text" id="nd-note-${id}" placeholder="Catatan..."><button class="btn-del-row" onclick="removeNewDataRow(${id})">✕</button>`;
   container.appendChild(row);refreshConfBar(DB.filter(d=>d.area===curArea));
 }
 function removeNewDataRow(id) {
@@ -703,7 +739,13 @@ function removeNewDataRow(id) {
   refreshConfBar(DB.filter(d=>d.area===curArea));
 }
 function getNewDataValues() {
-  return newDataRows.map(id=>({no_inv:document.getElementById(`nd-inv-${id}`)?.value||'',sim:document.getElementById(`nd-sim-${id}`)?.value||'',slsno:document.getElementById(`nd-sls-${id}`)?.value||'',nama:document.getElementById(`nd-nama-${id}`)?.value||'',note:document.getElementById(`nd-note-${id}`)?.value||''})).filter(r=>r.no_inv||r.sim);
+  return newDataRows.map(id=>({
+    no_inv: document.getElementById(`nd-inv-${id}`)?.value||'',
+    imei:   document.getElementById(`nd-imei-${id}`)?.value||'',
+    sim:    document.getElementById(`nd-sim-${id}`)?.value||'',
+    slsno:  document.getElementById(`nd-sls-${id}`)?.value||'',
+    note:   document.getElementById(`nd-note-${id}`)?.value||''
+  })).filter(r=>r.no_inv||r.imei||r.sim);
 }
 
 function refreshStats(rows) {
@@ -764,9 +806,9 @@ async function doSave() {
         SUBMIT_STATUS: newSubmitStatus, REVISED_AT: isRevisiMode?ts:'', REVISED_BY: isRevisiMode?email:''
       })),
       ...getNewDataValues().map(d=>({
-        Title: String(d.no_inv||'NEW'), AREA: curArea, NAMA_HOA: hoa, EMAIL_USER: email,
+        Title: String(d.no_inv||d.imei||'NEW'), AREA: curArea, NAMA_HOA: hoa, EMAIL_USER: email,
         TANGGAL: tanggal, TIMESTAMP: ts, REGION: curRegion, ENTITY: curEntity, BRANCH: curBranch,
-        NO_INVENTARIS: String(d.no_inv||''), IMEI: '', SIM_CARD: String(d.sim||''), SLSNO: String(d.slsno||''),
+        NO_INVENTARIS: String(d.no_inv||''), IMEI: String(d.imei||''), SIM_CARD: String(d.sim||''), SLSNO: String(d.slsno||''),
         STATUS: 'NEW DATA', CATATAN: String(d.note||''), TIPE: 'NEW DATA',
         SUBMIT_STATUS: newSubmitStatus, REVISED_AT: isRevisiMode?ts:'', REVISED_BY: isRevisiMode?email:''
       }))
@@ -853,8 +895,8 @@ function exportExcel() {
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s1),'Aset Terdaftar');
   const ndVals=getNewDataValues();
   const s2=[['NEW DATA'],['Area: '+curArea,'HOA: '+(hoa||'—'),'Tanggal: '+tanggal],[],
-    ['No','No Inventaris / IMEI','SIM Card','SLS No.','Nama Salesman','Catatan'],
-    ...(ndVals.length?ndVals.map((r,i)=>[i+1,r.no_inv,r.sim,r.slsno,r.nama,r.note]):[['(Tidak ada)']])];
+    ['No','No Inventaris','IMEI','SIM Card','SLS No.','Catatan'],
+    ...(ndVals.length?ndVals.map((r,i)=>[i+1,r.no_inv,r.imei,r.sim,r.slsno,r.note]):[['(Tidak ada)']])];
   XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s2),'New Data');
   XLSX.writeFile(wb,`Verifikasi_${curArea}_${(hoa).replace(/\s+/g,'_')}_${tanggal}.xlsx`);
   toast('📊 File Excel berhasil diunduh!');
@@ -864,6 +906,91 @@ function tutupSukses() {
   document.getElementById('sukses-screen').classList.remove('show');
   resetFilter();
   vData = {};
+}
+
+// ============================================================
+// ADMIN RESET FUNCTIONS
+// ============================================================
+async function loadResetUsers() {
+  const area = document.getElementById('admin-reset-area').value;
+  const container = document.getElementById('reset-users-container');
+  if (!area) {
+    container.innerHTML = `<div class="empty" style="padding:30px"><div class="ei">👥</div><p>Pilih area untuk melihat daftar user</p></div>`;
+    return;
+  }
+  container.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:13px">⏳ Memuat data...</div>`;
+  try {
+    const token = await getToken();
+    const url = `${SP_SITE}/_api/web/lists/getbytitle('${SP_LIST}')/items?$filter=AREA eq '${area}'&$select=Id,EMAIL_USER,NAMA_HOA,SUBMIT_STATUS,TIMESTAMP&$orderby=EMAIL_USER&$top=500`;
+    const res = await fetch(url, { headers: { 'Accept': 'application/json;odata=verbose', 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const items = data.d.results;
+    // Group by EMAIL_USER
+    const userMap = {};
+    items.forEach(i => {
+      const key = (i.EMAIL_USER || '').toLowerCase();
+      if (!userMap[key]) userMap[key] = { email: i.EMAIL_USER, nama: i.NAMA_HOA, status: i.SUBMIT_STATUS, ts: i.TIMESTAMP, ids: [] };
+      userMap[key].ids.push(i.Id);
+    });
+    const users = Object.values(userMap);
+    if (!users.length) {
+      container.innerHTML = `<div class="empty" style="padding:30px"><div class="ei">📭</div><p>Belum ada user yang submit untuk area <strong>${area}</strong></p></div>`;
+      return;
+    }
+    let html = `<div class="table-wrap"><table><thead><tr>
+      <th>#</th><th>Email</th><th>Nama HOA</th><th>Status</th><th>Waktu Submit</th><th class="center">Aksi</th>
+    </tr></thead><tbody>`;
+    users.forEach((u, i) => {
+      const statusColor = u.status === 'REVISED' ? 'var(--danger)' : u.status === 'SUBMITTED' ? 'var(--warning)' : 'var(--text-muted)';
+      html += `<tr>
+        <td style="color:var(--text-muted);font-size:12px">${i+1}</td>
+        <td><span class="mono" style="font-size:12px">${u.email || '—'}</span></td>
+        <td style="font-weight:600">${u.nama || '—'}</td>
+        <td><span style="font-weight:700;color:${statusColor}">${u.status || '—'}</span></td>
+        <td style="font-size:12px;color:var(--text-muted)">${u.ts || '—'}</td>
+        <td style="text-align:center">
+          <button class="btn btn-red-soft" style="height:30px;padding:0 12px;font-size:12px" onclick="resetUserStatus('${area}','${u.email}')">🔄 Reset</button>
+        </td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = `<div style="padding:20px;color:var(--danger);font-size:13px">❌ Gagal memuat data: ${e.message}</div>`;
+    toast('Gagal memuat data reset: ' + e.message, 'err');
+  }
+}
+
+async function resetUserStatus(area, email) {
+  if (!confirm(`Reset status submit untuk:\nEmail: ${email}\nArea: ${area}\n\nUser akan bisa input ulang. Lanjutkan?`)) return;
+  showLoading('Mereset status submit...');
+  try {
+    const token = await getToken();
+    // Get all item IDs for this user+area
+    const url = `${SP_SITE}/_api/web/lists/getbytitle('${SP_LIST}')/items?$filter=EMAIL_USER eq '${email}' and AREA eq '${area}'&$select=Id&$top=500`;
+    const res = await fetch(url, { headers: { 'Accept': 'application/json;odata=verbose', 'Authorization': 'Bearer ' + token } });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const ids = data.d.results.map(i => i.Id);
+    if (!ids.length) { toast('Tidak ada data ditemukan untuk user ini.', 'err'); hideLoading(); return; }
+    // Delete all items for this user+area (reset = remove data so they can re-submit fresh)
+    const listUrl = `${SP_SITE}/_api/web/lists/getbytitle('${SP_LIST}')/items`;
+    const headers = {
+      'Accept': 'application/json;odata=verbose',
+      'Content-Type': 'application/json;odata=verbose',
+      'Authorization': 'Bearer ' + token
+    };
+    for (const id of ids) {
+      await fetch(`${listUrl}(${id})`, { method: 'POST', headers: { ...headers, 'X-HTTP-Method': 'DELETE', 'IF-MATCH': '*' } });
+    }
+    toast(`✅ Status ${email} di area ${area} berhasil direset!`);
+    await loadResetUsers(); // Refresh list
+  } catch (e) {
+    toast('Gagal reset: ' + e.message, 'err');
+  } finally {
+    hideLoading();
+  }
 }
 function showLoading(text='Memuat...'){document.getElementById('loading-text').textContent=text;document.getElementById('loading-overlay').classList.add('show');}
 function hideLoading(){document.getElementById('loading-overlay').classList.remove('show');}
