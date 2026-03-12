@@ -227,6 +227,7 @@ tr.hl-tidak{background:#fff5f5 !important;}
     <div class="sukses-summary" id="sukses-summary"></div>
     <div class="sukses-locked">🔒 Form telah dikunci. Anda tidak dapat mengubah data ini kecuali melakukan revisi. Revisi hanya bisa dilakukan 1 kali.</div>
     <button class="btn-sukses-excel" onclick="exportExcel()">📊 Download Rekap Excel</button>
+    <button onclick="tutupSukses()" style="margin-top:10px;width:100%;height:40px;background:#f1f5f9;color:#475569;border:1.5px solid #e2e8f0;border-radius:10px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;">✕ Tutup</button>
   </div>
 </div>
 
@@ -773,15 +774,21 @@ async function doSave() {
 
     let ok = 0, errMsg = '';
 
-    if (isRevisiMode && existingItemIds.length > 0) {
-      // UPDATE existing items - hapus dulu semua, lalu tambah baru
-      for (const itemId of existingItemIds) {
-        await fetch(`${listUrl}(${itemId})`, {
-          method: 'POST',
-          headers: { ...headers, 'X-HTTP-Method': 'DELETE', 'IF-MATCH': '*' }
-        });
+    // Selalu hapus data lama sebelum insert (cegah duplikat)
+    try {
+      const chkUrl = SP_SITE + "/_api/web/lists/getbytitle('" + SP_LIST + "')/items?$filter=EMAIL_USER eq '" + email + "' and AREA eq '" + curArea + "'&$select=Id&$top=500";
+      const chkRes = await fetch(chkUrl, { headers: { 'Accept':'application/json;odata=verbose', 'Authorization':'Bearer ' + token } });
+      if (chkRes.ok) {
+        const chkData = await chkRes.json();
+        const idsToDelete = chkData.d.results.map(i=>i.Id);
+        for (const itemId of idsToDelete) {
+          await fetch(listUrl + '(' + itemId + ')', {
+            method: 'POST',
+            headers: { ...headers, 'X-HTTP-Method': 'DELETE', 'IF-MATCH': '*' }
+          });
+        }
       }
-    }
+    } catch(delErr) { console.warn('Delete check error:', delErr); }
 
     // INSERT semua item baru
     for (const item of allItems) {
@@ -853,6 +860,11 @@ function exportExcel() {
   toast('📊 File Excel berhasil diunduh!');
 }
 
+function tutupSukses() {
+  document.getElementById('sukses-screen').classList.remove('show');
+  resetFilter();
+  vData = {};
+}
 function showLoading(text='Memuat...'){document.getElementById('loading-text').textContent=text;document.getElementById('loading-overlay').classList.add('show');}
 function hideLoading(){document.getElementById('loading-overlay').classList.remove('show');}
 function toast(msg,type=''){const c=document.getElementById('toasts'),t=document.createElement('div');t.className='toast'+(type?' '+type:'');t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),5000);}
