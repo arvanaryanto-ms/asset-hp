@@ -607,12 +607,18 @@ async function doSave() {
       ...getTambahanValues().map(d=>({Title:d.no_inv||'TAMBAHAN',AREA:curArea,NAMA_HOA:hoa,TANGGAL:tanggal,TIMESTAMP:ts,NO_INVENTARIS:d.no_inv,IMEI:d.imei,SIM_CARD:d.sim,SLSNO:d.slsno,STATUS:'TAMBAHAN',CATATAN:d.note,TIPE:'ASET TAMBAHAN'}))
     ];
 
-    let ok=0;
+    let ok=0, errMsg='';
     for(const item of allItems){
-      const res=await fetch(listUrl,{method:'POST',headers,body:JSON.stringify({__metadata:{type:'SP.Data.VerifikasiAsetHPListItem'},...item})});
-      if(res.ok)ok++;
+      const body = {__metadata:{type:'SP.Data.VerifikasiAsetHPListItem'}, Title: item.NO_INVENTARIS||'item', ...item};
+      const res=await fetch(listUrl,{method:'POST',headers,body:JSON.stringify(body)});
+      if(res.ok){ ok++; } else {
+        const errData = await res.text();
+        errMsg = errData;
+        console.error('Save error:', res.status, errData);
+      }
     }
-    toast(`✅ ${ok} data ${curArea} berhasil disimpan ke SharePoint!`);
+    if(ok>0) toast(`✅ ${ok} data ${curArea} berhasil disimpan ke SharePoint!`);
+    else toast('Gagal simpan. Error: ' + errMsg.substring(0,200), 'err');
   } catch(e) {
     toast('Gagal simpan: '+e.message,'err');
   } finally {
