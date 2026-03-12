@@ -609,7 +609,10 @@ async function doSave() {
 
     let ok=0, errMsg='';
     for(const item of allItems){
-      const body = {__metadata:{type:'SP.Data.VerifikasiAsetHPListItem'}, Title: item.NO_INVENTARIS||'item', ...item};
+      // Paksa semua nilai jadi string
+      const safeItem = {};
+      for(const k of Object.keys(item)) safeItem[k] = String(item[k]||'');
+      const body = {__metadata:{type:'SP.Data.VerifikasiAsetHPListItem'}, Title: safeItem.NO_INVENTARIS||'item', ...safeItem};
       const res=await fetch(listUrl,{method:'POST',headers,body:JSON.stringify(body)});
       if(res.ok){ ok++; } else {
         const errData = await res.text();
