@@ -6,6 +6,7 @@
 <title>Verifikasi Aset HP Salesman</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
 <style>
 :root {
   --bg:#f0f2f5; --white:#fff; --surface:#f8f9fa; --border:#e2e8f0; --border-dark:#cbd5e1;
@@ -503,9 +504,9 @@ async function doSave() {
   btn.disabled=true; btn.textContent='⏳ Menyimpan...';
 
   try {
-    // Kirim setiap baris aset ke SharePoint List
+    // Kirim setiap baris aset ke SharePoint List pakai MSAL token
     const listUrl = `${SHAREPOINT_SITE}/_api/web/lists/getbytitle('${SHAREPOINT_LIST}')/items`;
-    const token = await getDigestToken();
+    const token = await getToken();
     
     const allItems = [
       ...payload.aset_terdaftar.map(d => ({
@@ -556,12 +557,10 @@ async function doSave() {
     for (const item of allItems) {
       const res = await fetch(listUrl, {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Accept': 'application/json;odata=verbose',
           'Content-Type': 'application/json;odata=verbose',
-          'X-RequestDigest': token,
-          'X-HTTP-Method': 'POST'
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ __metadata: { type: `SP.Data.VerifikasiAsetHPListItem` }, ...item })
       });
