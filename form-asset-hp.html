@@ -819,7 +819,7 @@ async function doSave() {
   if(!curArea){toast('Pilih area terlebih dahulu','err');return;}
   const rows=DB.filter(d=>d.area===curArea);
   const belum=rows.filter(d=>!vData[d.id]?.status).length;
-  if(belum>0&&!confirm(`⚠️ Masih ada ${belum} item belum dicek.\nLanjutkan simpan?`))return;
+  if(belum>0){alert(`⚠️ Masih ada ${belum} item belum dicek.\nSemua item harus dicek (Ada / Tidak Ada) sebelum bisa disimpan.`);return;}
 
   const hoa = currentUser.name||currentUser.username;
   const email = currentUser.username;
