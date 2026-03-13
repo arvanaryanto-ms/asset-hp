@@ -534,12 +534,21 @@ function renderDashboard() {
   const totalDeviceMaster = masterFiltered.length;
 
   // ── SP List-based stats ──
-  const submittedAreas = [...new Set(filteredData.filter(d=>d.SUBMIT_STATUS==='SUBMITTED'||d.SUBMIT_STATUS==='REVISED').map(d=>d.AREA))];
-  const revisedAreas   = [...new Set(filteredData.filter(d=>d.SUBMIT_STATUS==='REVISED').map(d=>d.AREA))];
+  // submittedAreas & revisedAreas pakai allData (bukan filteredData) agar filter status BELUM
+  // tidak menyembunyikan area yang sudah submit dari perhitungan
+  const allDataFiltered = allData.filter(d => {
+    if (fRegion && d.REGION !== fRegion) return false;
+    if (fEntity && d.ENTITY !== fEntity) return false;
+    if (fBranch && d.BRANCH !== fBranch) return false;
+    if (fArea   && d.AREA   !== fArea)   return false;
+    return true;
+  });
+  const submittedAreas = [...new Set(allDataFiltered.filter(d=>d.SUBMIT_STATUS==='SUBMITTED'||d.SUBMIT_STATUS==='REVISED').map(d=>d.AREA))];
+  const revisedAreas   = [...new Set(allDataFiltered.filter(d=>d.SUBMIT_STATUS==='REVISED').map(d=>d.AREA))];
   const belumSubmit    = masterAreas.filter(a => !submittedAreas.includes(a));
 
   // Device submitted = semua device di SP List yang TIPE=TERDAFTAR (bukan new data)
-  const deviceSubmitted   = filteredData.filter(d => d.TIPE === 'TERDAFTAR').length;
+  const deviceSubmitted   = allDataFiltered.filter(d => d.TIPE === 'TERDAFTAR').length;
   const belumDicekDevice  = totalDeviceMaster - deviceSubmitted;
 
   // Ringkasan status unit
@@ -566,10 +575,10 @@ function renderDashboard() {
 
   // Area Progress
   const progEl = document.getElementById('area-progress-list');
-  if (!areas.length) { progEl.innerHTML = '<div class="empty-state">Tidak ada data</div>'; }
+  if (!masterAreas.length) { progEl.innerHTML = '<div class="empty-state">Tidak ada data</div>'; }
   else {
     let html = '';
-    areas.forEach(a => {
+    masterAreas.forEach(a => {
       const aData = filteredData.filter(d=>d.AREA===a);
       const ada = aData.filter(d=>d.STATUS==='ADA').length;
       const total = aData.filter(d=>d.TIPE==='TERDAFTAR').length;
