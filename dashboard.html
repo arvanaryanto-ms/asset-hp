@@ -173,7 +173,8 @@ td{padding:9px 12px;vertical-align:middle;}
   <div class="tabs">
     <button class="tab active" onclick="showTab(0)">📊 Dashboard</button>
     <button class="tab" onclick="showTab(1)">📋 Semua Data</button>
-    <button class="tab" onclick="showTab(2)">👥 Status User</button>
+    <button class="tab" onclick="showTab(2)">📊 Rekap Master</button>
+    <button class="tab" onclick="showTab(3)">👥 Status User</button>
   </div>
 
   <!-- FILTER BAR (shared) -->
@@ -263,7 +264,43 @@ td{padding:9px 12px;vertical-align:middle;}
   </div>
 
   <!-- TAB 2: STATUS USER -->
+  <!-- TAB 2: REKAP MASTER VS SUBMIT -->
   <div id="tab-2" style="display:none">
+    <div class="card">
+      <div class="card-head" style="flex-wrap:wrap;gap:10px">
+        <div class="sec-title">📊 Rekap Master vs Submit</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:auto">
+          <div style="display:flex;gap:6px;align-items:center">
+            <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px">Region</label>
+            <select id="rekap-region" onchange="onRekapFilter()" style="height:30px;padding:0 24px 0 8px;border:1.5px solid #e2e8f0;border-radius:6px;font-family:inherit;font-size:12px;color:#1e293b;background:#fff;cursor:pointer;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 6px center;min-width:130px">
+              <option value="">Semua Region</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px">Entity</label>
+            <select id="rekap-entity" onchange="onRekapFilter()" style="height:30px;padding:0 24px 0 8px;border:1.5px solid #e2e8f0;border-radius:6px;font-family:inherit;font-size:12px;color:#1e293b;background:#fff;cursor:pointer;appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 6px center;min-width:130px">
+              <option value="">Semua Entity</option>
+            </select>
+          </div>
+          <button class="btn-reset-f" onclick="resetRekapFilter()" style="height:30px">↩ Reset</button>
+          <button class="btn-exp-sm" onclick="exportRekapExcel()" style="height:30px;padding:0 12px;font-size:12px">📊 Export Excel</button>
+        </div>
+      </div>
+      <div style="margin-bottom:10px;display:flex;gap:8px;align-items:center">
+        <span id="rekap-count" style="font-size:12px;color:#94a3b8"></span>
+        <span style="font-size:11px;color:#94a3b8;margin-left:auto">
+          <span style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">■ Master</span>
+          <span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;margin-left:4px">■ Submit</span>
+        </span>
+      </div>
+      <div class="tbl-wrap" id="rekap-table-wrap">
+        <div class="empty-state">Memuat data...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: STATUS USER -->
+  <div id="tab-3" style="display:none">
     <div class="card">
       <div class="card-head">
         <div class="sec-title">👥 Status Submit per User</div>
@@ -378,6 +415,8 @@ async function loadMasterData() {
       area:   String(r['AREA'] || '').toUpperCase(),
     })).filter(r => r.area);
     toast(`✅ Master: ${masterDB.length} device, ${[...new Set(masterDB.map(d=>d.area))].length} area`);
+    // Re-populate filter dropdowns setelah master dimuat
+    populateFilterOptions();
   } catch(e) {
     toast('Gagal muat master data: ' + e.message, 'err');
   }
@@ -438,15 +477,21 @@ async function loadAllData() {
 }
 
 function populateFilterOptions() {
-  const regions  = [...new Set(allData.map(d=>d.REGION||'').filter(Boolean))].sort();
-  const entities = [...new Set(allData.map(d=>d.ENTITY||'').filter(Boolean))].sort();
-  const branches = [...new Set(allData.map(d=>d.BRANCH||'').filter(Boolean))].sort();
-  const areas    = [...new Set(allData.map(d=>d.AREA||'').filter(Boolean))].sort();
+  // Gunakan masterDB sebagai sumber filter agar area belum submit tetap muncul
+  const src = masterDB.length ? masterDB : allData.map(d=>({region:d.REGION||'',entity:d.ENTITY||'',branch:d.BRANCH||'',area:d.AREA||''}));
+  const regions  = [...new Set(src.map(d=>d.region||'').filter(Boolean))].sort();
+  const entities = [...new Set(src.map(d=>d.entity||'').filter(Boolean))].sort();
+  const branches = [...new Set(src.map(d=>d.branch||'').filter(Boolean))].sort();
+  const areas    = [...new Set(src.map(d=>d.area||'').filter(Boolean))].sort();
 
   fillSelect('f-region', regions, 'Semua Region');
   fillSelect('f-entity', entities, 'Semua Entity');
   fillSelect('f-branch', branches, 'Semua Branch');
   fillSelect('f-area', areas, 'Semua Area');
+
+  // Populate rekap filter dropdowns juga
+  fillSelect('rekap-region', regions, 'Semua Region');
+  fillSelect('rekap-entity', entities, 'Semua Entity');
 }
 
 function fillSelect(id, options, placeholder) {
@@ -463,8 +508,9 @@ function onFilterChange(level) {
   const entity = document.getElementById('f-entity').value;
   const branch = document.getElementById('f-branch').value;
 
+  const mSrc = masterDB.length ? masterDB.map(d=>({REGION:d.region,ENTITY:d.entity,BRANCH:d.branch,AREA:d.area})) : allData;
   if (level === 'region') {
-    const sub = allData.filter(d => !region || d.REGION === region);
+    const sub = mSrc.filter(d => !region || d.REGION === region);
     const entities = [...new Set(sub.map(d=>d.ENTITY||'').filter(Boolean))].sort();
     const branches = [...new Set(sub.map(d=>d.BRANCH||'').filter(Boolean))].sort();
     const areas    = [...new Set(sub.map(d=>d.AREA||'').filter(Boolean))].sort();
@@ -472,13 +518,13 @@ function onFilterChange(level) {
     fillSelect('f-branch', branches, 'Semua Branch');
     fillSelect('f-area', areas, 'Semua Area');
   } else if (level === 'entity') {
-    const sub = allData.filter(d => (!region||d.REGION===region) && (!entity||d.ENTITY===entity));
+    const sub = mSrc.filter(d => (!region||d.REGION===region) && (!entity||d.ENTITY===entity));
     const branches = [...new Set(sub.map(d=>d.BRANCH||'').filter(Boolean))].sort();
     const areas    = [...new Set(sub.map(d=>d.AREA||'').filter(Boolean))].sort();
     fillSelect('f-branch', branches, 'Semua Branch');
     fillSelect('f-area', areas, 'Semua Area');
   } else if (level === 'branch') {
-    const sub = allData.filter(d => (!region||d.REGION===region) && (!entity||d.ENTITY===entity) && (!branch||d.BRANCH===branch));
+    const sub = mSrc.filter(d => (!region||d.REGION===region) && (!entity||d.ENTITY===entity) && (!branch||d.BRANCH===branch));
     const areas = [...new Set(sub.map(d=>d.AREA||'').filter(Boolean))].sort();
     fillSelect('f-area', areas, 'Semua Area');
   }
@@ -504,7 +550,8 @@ function applyFilter() {
 
   renderDashboard();
   if (activeTab === 1) renderDataTable();
-  if (activeTab === 2) renderUserStatus();
+  if (activeTab === 2) renderRekapMaster();
+  if (activeTab === 3) renderUserStatus();
 }
 
 function resetFilter() {
@@ -663,9 +710,124 @@ function renderUserStatus() {
 function showTab(i) {
   activeTab = i;
   document.querySelectorAll('.tab').forEach((t,idx)=>t.classList.toggle('active',idx===i));
-  [0,1,2].forEach(idx=>document.getElementById('tab-'+idx).style.display=idx===i?'block':'none');
+  [0,1,2,3].forEach(idx=>document.getElementById('tab-'+idx).style.display=idx===i?'block':'none');
   if (i===1) renderDataTable();
-  if (i===2) renderUserStatus();
+  if (i===2) renderRekapMaster();
+  if (i===3) renderUserStatus();
+}
+
+function onRekapFilter() {
+  renderRekapMaster();
+}
+
+function resetRekapFilter() {
+  document.getElementById('rekap-region').value = '';
+  document.getElementById('rekap-entity').value = '';
+  renderRekapMaster();
+}
+
+function renderRekapMaster() {
+  const rRegion = document.getElementById('rekap-region').value;
+  const rEntity = document.getElementById('rekap-entity').value;
+
+  // Filter master
+  let masterRows = masterDB.filter(d => {
+    if (rRegion && d.region !== rRegion) return false;
+    if (rEntity && d.entity !== rEntity) return false;
+    return true;
+  });
+
+  // Build lookup dari SP List: key = NO_INVENTARIS + '_' + BRANCH
+  const spMap = {};
+  allData.forEach(d => {
+    const key = (d.NO_INVENTARIS||'') + '_' + (d.BRANCH||'');
+    if (!key || key === '_') return;
+    // ambil data terbaru (REVISED > SUBMITTED)
+    if (!spMap[key] || d.SUBMIT_STATUS === 'REVISED') spMap[key] = d;
+  });
+
+  document.getElementById('rekap-count').textContent = masterRows.length + ' device';
+
+  if (!masterRows.length) {
+    document.getElementById('rekap-table-wrap').innerHTML = '<div class="empty-state">Tidak ada data master</div>';
+    return;
+  }
+
+  const stPill = s => s === 'ADA' ? 'sp-green' : s === 'TIDAK ADA' ? 'sp-red' : s === 'BELUM DICEK' ? 'sp-orange' : 'sp-gray';
+
+  let html = `<table style="min-width:1100px">
+    <thead>
+      <tr style="background:#f8fafc">
+        <th colspan="8" style="background:#dbeafe;color:#1d4ed8;text-align:center;font-size:10px">← MASTER DATA</th>
+        <th colspan="3" style="background:#dcfce7;color:#166534;text-align:center;font-size:10px">← DATA SUBMITTED →</th>
+      </tr>
+      <tr>
+        <th>A. Region</th><th>B. Entity</th><th>C. Branch</th><th>D. Area</th>
+        <th>E. No Inventaris</th><th>F. IMEI</th><th>G. SIM Card</th><th>H. SLSNO</th>
+        <th>I. Status</th><th>J. Email HOA</th><th>K. Key (E+C)</th>
+      </tr>
+    </thead><tbody>`;
+
+  masterRows.forEach(m => {
+    const key = m.no_inv + '_' + m.branch;
+    const sp  = spMap[key] || null;
+    const status   = sp ? (sp.STATUS || '—') : '';
+    const emailHoa = sp ? (sp.EMAIL_USER || '—') : '';
+    const pill     = sp ? stPill(status) : 'sp-gray';
+    const statusTxt = sp ? `<span class="sp ${pill}">${status}</span>` : '<span class="sp sp-gray" style="opacity:0.5">belum submit</span>';
+    const emailTxt  = sp ? emailHoa : '<span style="color:#94a3b8;font-size:11px">—</span>';
+    const rowStyle  = sp ? '' : 'background:#fafafa;';
+    html += `<tr style="${rowStyle}">
+      <td>${m.region||'—'}</td>
+      <td>${m.entity||'—'}</td>
+      <td>${m.branch||'—'}</td>
+      <td><b>${m.area||'—'}</b></td>
+      <td class="mono">${m.no_inv||'—'}</td>
+      <td class="mono">${m.imei||'—'}</td>
+      <td class="mono">${m.sim||'—'}</td>
+      <td><span style="background:#dbeafe;color:#1d4ed8;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">${m.slsno||'—'}</span></td>
+      <td>${statusTxt}</td>
+      <td class="mono" style="font-size:11px">${emailTxt}</td>
+      <td class="mono" style="font-size:10px;color:#94a3b8">${key}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('rekap-table-wrap').innerHTML = html;
+}
+
+function exportRekapExcel() {
+  if (!masterDB.length) { toast('Master data belum dimuat', 'err'); return; }
+  const rRegion = document.getElementById('rekap-region').value;
+  const rEntity = document.getElementById('rekap-entity').value;
+
+  let masterRows = masterDB.filter(d => {
+    if (rRegion && d.region !== rRegion) return false;
+    if (rEntity && d.entity !== rEntity) return false;
+    return true;
+  });
+
+  const spMap = {};
+  allData.forEach(d => {
+    const key = (d.NO_INVENTARIS||'') + '_' + (d.BRANCH||'');
+    if (!key || key === '_') return;
+    if (!spMap[key] || d.SUBMIT_STATUS === 'REVISED') spMap[key] = d;
+  });
+
+  const header = ['A. Region','B. Entity','C. Branch','D. Area','E. No Inventaris','F. IMEI','G. SIM Card','H. SLSNO','I. Status','J. Email HOA','K. Key (E+C)'];
+  const rows = masterRows.map(m => {
+    const key = m.no_inv + '_' + m.branch;
+    const sp  = spMap[key] || null;
+    return [m.region, m.entity, m.branch, m.area, m.no_inv, m.imei, m.sim, m.slsno,
+            sp ? (sp.STATUS||'—') : 'BELUM SUBMIT',
+            sp ? (sp.EMAIL_USER||'—') : '—',
+            key];
+  });
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([header, ...rows]), 'Rekap Master vs Submit');
+  XLSX.writeFile(wb, `Rekap_Master_vs_Submit_${new Date().toLocaleDateString('id-ID').replace(/\//g,'-')}.xlsx`);
+  toast('📊 Export Rekap berhasil!');
 }
 
 function exportExcel() {
