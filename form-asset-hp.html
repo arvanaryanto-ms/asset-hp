@@ -405,7 +405,8 @@ const TENANT_ID   = 'ca373342-64ee-46d7-95e8-cc81024e9682';
 const SP_SITE     = 'https://cimoryindonesia.sharepoint.com/sites/asset';
 const SP_LIST     = 'VerifikasiAsetHP';
 const SCOPES      = ['https://cimoryindonesia.sharepoint.com/AllSites.Write'];
-const ADMIN_EMAIL = 'arvan.aryanto@cimory.com';
+const ADMIN_EMAILS  = ['arvan.aryanto@cimory.com','indra.cahya@cimory.com','ayub.pratama@cimory.com','steven@cimory.com'];
+const TESTER_EMAIL  = 'sfa.helpdesk@cimory.com';
 const DASHBOARD_URL = 'dashboard.html';
 const MASTER_FILE_PATH = '/sites/asset/Shared Documents/Assets/DataHP/master_data_hp.xlsx';
 // ============================================================
@@ -420,7 +421,10 @@ let formLocked = false;
 let savedRows = []; // untuk sukses screen
 
 function isAdmin() {
-  return currentUser?.username?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+  return ADMIN_EMAILS.includes(currentUser?.username?.toLowerCase());
+}
+function isTester() {
+  return currentUser?.username?.toLowerCase() === TESTER_EMAIL.toLowerCase();
 }
 
 function initMsal() {
@@ -547,6 +551,7 @@ async function loadMasterFromSP() {
       entity: r['ENTITY'] || '',
       branch: r['BRANCH'] || '',
       area:   String(r['AREA'] || '').toUpperCase(),
+      email:  String(r['EMAIL'] || '').toLowerCase(),
     })).filter(r => r.area);
     const areas = [...new Set(DB.map(d => d.area))].sort();
     ['f-area', 'admin-reset-area'].forEach(selId => {
@@ -558,6 +563,8 @@ async function loadMasterFromSP() {
     statusEl.textContent = `✅ ${DB.length} data HP berhasil dimuat dari SharePoint`;
     statusEl.style.color = 'var(--success)';
     toast(`✅ ${DB.length} data HP dimuat!`);
+    // Auto-select area berdasarkan email login
+    autoSelectArea();
   } catch (e) {
     statusEl.textContent = `❌ Gagal memuat master data: ${e.message}`;
     statusEl.style.color = 'var(--danger)';
@@ -574,6 +581,30 @@ function onAreaChange() {
   document.getElementById('f-region').value = row?.region||'';
   document.getElementById('f-entity').value = row?.entity||'';
   document.getElementById('f-branch').value = row?.branch||'';
+}
+
+function autoSelectArea() {
+  // Admin & tester bisa lihat semua area, tidak dikunci
+  if (isAdmin() || isTester()) return;
+
+  const email = currentUser?.username?.toLowerCase();
+  const match = DB.find(d => d.email === email);
+  if (!match) {
+    toast('⚠️ Email kamu tidak ditemukan di data master. Hubungi admin.', 'err');
+    document.getElementById('master-status').textContent = '⚠️ Email tidak terdaftar di master data';
+    document.getElementById('master-status').style.color = 'var(--danger)';
+    return;
+  }
+  // Set area sesuai email
+  const sel = document.getElementById('f-area');
+  sel.value = match.area;
+  sel.disabled = true;
+  // Trigger populate region/entity/branch
+  onAreaChange();
+  // Tambah info visual bahwa area terkunci
+  document.getElementById('master-status').textContent =
+    `✅ ${DB.length} data HP dimuat — Area kamu: ${match.area} (terkunci)`;
+  document.getElementById('master-status').style.color = 'var(--success)';
 }
 
 async function applyFilter() {
@@ -676,6 +707,8 @@ function unlockForm() {
 }
 
 function resetFilter() {
+  // Re-enable area dropdown jika sebelumnya dikunci, lalu lock ulang
+  document.getElementById('f-area').disabled = false;
   document.getElementById('f-area').value='';
   ['f-region','f-entity','f-branch'].forEach(id=>document.getElementById(id).value='');
   curArea=''; submitStatus=null; isRevisiMode=false; formLocked=false;
@@ -688,6 +721,8 @@ function resetFilter() {
   document.getElementById('new-data-section').style.display='none';
   document.getElementById('revisi-banner').classList.remove('show');
   document.getElementById('locked-banner').classList.remove('show');
+  autoSelectArea();
+
 }
 
 function renderTable(rows) {
