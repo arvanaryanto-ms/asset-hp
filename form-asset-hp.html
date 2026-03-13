@@ -284,18 +284,11 @@ tr.hl-tidak{background:#fff5f5 !important;}
   </div>
 
   <div class="card" id="master-card">
-    <div class="card-head"><span>📂</span><h2>Load Data Master HP</h2></div>
-    <div class="card-body">
-      <div class="form-row" style="align-items:center">
-        <div>
-          <label style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-mid);display:block;margin-bottom:6px">File master_data_hp.xlsx</label>
-          <label style="display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 16px;background:var(--accent);color:#fff;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;">
-            📂 Pilih File Excel
-            <input type="file" accept=".xlsx,.xls" onchange="loadMasterFile(this)" style="display:none">
-          </label>
-        </div>
-        <div style="font-size:13px;font-weight:500;color:var(--text-muted)" id="master-status">Belum ada file dimuat</div>
-      </div>
+    <div class="card-head"><span>☁️</span><h2>Data Master HP — SharePoint</h2></div>
+    <div class="card-body" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div class="spinner" id="master-spinner" style="width:18px;height:18px;border-width:2px;display:none"></div>
+      <div style="font-size:13px;font-weight:500;color:var(--text-muted)" id="master-status">⏳ Memuat data master dari SharePoint...</div>
+      <button class="btn btn-outline" id="master-retry-btn" onclick="loadMasterFromSP()" style="display:none;margin-left:auto">🔄 Coba Lagi</button>
     </div>
   </div>
 
@@ -483,6 +476,8 @@ function goForm() {
   if (isAdmin()) {
     document.getElementById('admin-reset-page').classList.add('show');
   }
+  // Auto-load master data dari SharePoint
+  loadMasterFromSP();
 }
 
 async function doLogout() {
@@ -518,39 +513,59 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-function loadMasterFile(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const wb = XLSX.read(e.target.result, { type: 'array' });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
-      DB = rows.map((r, i) => ({
-        id: i + 1,
-        no_inv: r['NO_INVENTARIS'] || '',
-        imei:   r['IMEI'] || '',
-        sim:    String(r['SIM_CARD'] || ''),
-        slsno:  r['SLSNO'] || '',
-        region: r['REGION'] || '',
-        entity: r['ENTITY'] || '',
-        branch: r['BRANCH'] || '',
-        area:   String(r['AREA'] || '').toUpperCase(),
-      })).filter(r => r.area);
-      const areas = [...new Set(DB.map(d => d.area))].sort();
-      ['f-area', 'admin-reset-area'].forEach(selId => {
-        const sel = document.getElementById(selId);
-        if (!sel) return;
-        sel.innerHTML = '<option value="">— Pilih Area —</option>';
-        areas.forEach(a => { const o = document.createElement('option'); o.value = a; o.textContent = a; sel.appendChild(o); });
-      });
-      document.getElementById('master-status').textContent = `✅ ${DB.length} data HP dimuat dari ${file.name}`;
-      document.getElementById('master-status').style.color = 'var(--success)';
-      toast(`✅ ${DB.length} data HP berhasil dimuat!`);
-    } catch (e) { toast('Gagal baca file: ' + e.message, 'err'); }
-  };
-  reader.readAsArrayBuffer(file);
+async function loadMasterFromSP() {
+  const statusEl = document.getElementById('master-status');
+  const spinner  = document.getElementById('master-spinner');
+  const retryBtn = document.getElementById('master-retry-btn');
+  statusEl.textContent = '⏳ Memuat data master dari SharePoint...';
+  statusEl.style.color = 'var(--text-muted)';
+  spinner.style.display = 'block';
+  retryBtn.style.display = 'none';
+  try {
+    const token = await getToken();
+    // Gunakan SharePoint REST API untuk download file binary
+    const encodedPath = encodeURIComponent(MASTER_FILE_PATH);
+    const apiUrl = `${SP_SITE}/_api/web/GetFileByServerRelativeUrl('${encodedPath}')/$value`;
+    const res = await fetch(apiUrl, {
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Accept': 'application/octet-stream'
+      }
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const arrayBuffer = await res.arrayBuffer();
+    const wb = XLSX.read(arrayBuffer, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+    DB = rows.map((r, i) => ({
+      id: i + 1,
+      no_inv: r['NO_INVENTARIS'] || '',
+      imei:   r['IMEI'] || '',
+      sim:    String(r['SIM_CARD'] || ''),
+      slsno:  r['SLSNO'] || '',
+      region: r['REGION'] || '',
+      entity: r['ENTITY'] || '',
+      branch: r['BRANCH'] || '',
+      area:   String(r['AREA'] || '').toUpperCase(),
+    })).filter(r => r.area);
+    const areas = [...new Set(DB.map(d => d.area))].sort();
+    ['f-area', 'admin-reset-area'].forEach(selId => {
+      const sel = document.getElementById(selId);
+      if (!sel) return;
+      sel.innerHTML = '<option value="">— Pilih Area —</option>';
+      areas.forEach(a => { const o = document.createElement('option'); o.value = a; o.textContent = a; sel.appendChild(o); });
+    });
+    statusEl.textContent = `✅ ${DB.length} data HP berhasil dimuat dari SharePoint`;
+    statusEl.style.color = 'var(--success)';
+    toast(`✅ ${DB.length} data HP dimuat!`);
+  } catch (e) {
+    statusEl.textContent = `❌ Gagal memuat master data: ${e.message}`;
+    statusEl.style.color = 'var(--danger)';
+    retryBtn.style.display = 'inline-flex';
+    toast('Gagal memuat master data: ' + e.message, 'err');
+  } finally {
+    spinner.style.display = 'none';
+  }
 }
 
 function onAreaChange() {
