@@ -58,11 +58,11 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1e293b;min-height:
 .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
 .stat-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
 .stat-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
-.si-blue{background:#dbeafe;}.si-green{background:#dcfce7;}.si-orange{background:#fef3c7;}.si-red{background:#fee2e2;}.si-purple{background:#ede9fe;}
+.si-blue{background:#dbeafe;}.si-green{background:#dcfce7;}.si-orange{background:#fef3c7;}.si-red{background:#fee2e2;}.si-purple{background:#ede9fe;}.si-teal{background:#ccfbf1;}
 .stat-label{font-size:11px;color:#94a3b8;font-weight:500;margin-bottom:2px;}
 .stat-val{font-size:24px;font-weight:800;}
 .stat-sub{font-size:10px;color:#94a3b8;margin-top:1px;}
-.sv-blue{color:#0ea5e9;}.sv-green{color:#16a34a;}.sv-orange{color:#d97706;}.sv-red{color:#dc2626;}.sv-purple{color:#7c3aed;}
+.sv-blue{color:#0ea5e9;}.sv-green{color:#16a34a;}.sv-orange{color:#d97706;}.sv-red{color:#dc2626;}.sv-purple{color:#7c3aed;}.sv-teal{color:#0f766e;}
 
 .two-col{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:20px;}
 .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px;}
@@ -106,7 +106,7 @@ body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1e293b;min-height:
 .act-time{font-size:10px;color:#94a3b8;text-align:right;white-space:nowrap;}
 
 /* SUMMARY */
-.sum-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.sum-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
 .sum-box{text-align:center;padding:14px;border-radius:8px;}
 .sum-val{font-size:26px;font-weight:800;}
 .sum-label{font-size:11px;font-weight:600;margin-top:2px;}
@@ -204,12 +204,13 @@ td{padding:9px 12px;vertical-align:middle;}
 
   <!-- TAB 0: DASHBOARD -->
   <div id="tab-0">
+    <!-- STAT CARDS ATAS: satuan AREA -->
     <div class="stats-grid">
-      <div class="stat-card"><div class="stat-icon si-blue">📋</div><div><div class="stat-label">Total Area</div><div class="stat-val sv-blue" id="s-total-area">—</div><div class="stat-sub">area terdaftar</div></div></div>
-      <div class="stat-card"><div class="stat-icon si-green">✅</div><div><div class="stat-label">Sudah Submit</div><div class="stat-val sv-green" id="s-submit">—</div><div class="stat-sub" id="s-submit-pct">—</div></div></div>
+      <div class="stat-card"><div class="stat-icon si-blue">🗺️</div><div><div class="stat-label">Total Area</div><div class="stat-val sv-blue" id="s-total-area">—</div><div class="stat-sub" id="s-total-area-sub">dari master</div></div></div>
+      <div class="stat-card"><div class="stat-icon si-blue">📱</div><div><div class="stat-label">Total Device</div><div class="stat-val sv-blue" id="s-total-device">—</div><div class="stat-sub">dari master</div></div></div>
+      <div class="stat-card"><div class="stat-icon si-green">✅</div><div><div class="stat-label">Sudah Submit</div><div class="stat-val sv-green" id="s-submit">—</div><div class="stat-sub" id="s-submit-pct">— area</div></div></div>
       <div class="stat-card"><div class="stat-icon si-orange">⏳</div><div><div class="stat-label">Belum Submit</div><div class="stat-val sv-orange" id="s-belum">—</div><div class="stat-sub">perlu follow up</div></div></div>
       <div class="stat-card"><div class="stat-icon si-purple">✏️</div><div><div class="stat-label">Direvisi</div><div class="stat-val sv-purple" id="s-revised">—</div><div class="stat-sub">dari total submit</div></div></div>
-      <div class="stat-card"><div class="stat-icon si-red">❌</div><div><div class="stat-label">Total Tidak Ada</div><div class="stat-val sv-red" id="s-tidak">—</div><div class="stat-sub">unit HP tidak ada</div></div></div>
     </div>
 
     <div class="two-col">
@@ -232,11 +233,12 @@ td{padding:9px 12px;vertical-align:middle;}
     <div class="three-col">
       <div class="card" style="grid-column:span 2">
         <div class="card-head"><div class="sec-title">📊 Ringkasan Status Aset</div></div>
-        <div class="sum-grid">
-          <div class="sum-box" style="background:#dcfce7"><div class="sum-val" style="color:#16a34a" id="sum-ada">—</div><div class="sum-label" style="color:#16a34a">Total ADA ✅</div></div>
-          <div class="sum-box" style="background:#fee2e2"><div class="sum-val" style="color:#dc2626" id="sum-tidak">—</div><div class="sum-label" style="color:#dc2626">Total TIDAK ADA ❌</div></div>
+        <div class="sum-grid" style="grid-template-columns:repeat(5,1fr)">
+          <div class="sum-box" style="background:#dbeafe"><div class="sum-val" style="color:#0ea5e9" id="sum-total-dev">—</div><div class="sum-label" style="color:#0369a1">Total Device 📱</div></div>
+          <div class="sum-box" style="background:#dcfce7"><div class="sum-val" style="color:#16a34a" id="sum-ada">—</div><div class="sum-label" style="color:#16a34a">HP Ada ✅</div></div>
+          <div class="sum-box" style="background:#fee2e2"><div class="sum-val" style="color:#dc2626" id="sum-tidak">—</div><div class="sum-label" style="color:#dc2626">Tidak Ditemukan ❌</div></div>
           <div class="sum-box" style="background:#fef3c7"><div class="sum-val" style="color:#d97706" id="sum-belum">—</div><div class="sum-label" style="color:#d97706">Belum Dicek ⏳</div></div>
-          <div class="sum-box" style="background:#fee2e2"><div class="sum-val" style="color:#dc2626" id="sum-new">—</div><div class="sum-label" style="color:#dc2626">New Data ⚠️</div></div>
+          <div class="sum-box" style="background:#fef9c3"><div class="sum-val" style="color:#854d0e" id="sum-new">—</div><div class="sum-label" style="color:#854d0e">Belum Terdaftar ⚠️</div></div>
         </div>
       </div>
       <div class="card">
@@ -286,11 +288,13 @@ const SP_SITE     = 'https://cimoryindonesia.sharepoint.com/sites/asset';
 const SP_LIST     = 'VerifikasiAsetHP';
 const SCOPES      = ['https://cimoryindonesia.sharepoint.com/AllSites.Write'];
 const ADMIN_EMAIL = 'arvan.aryanto@cimory.com';
+const MASTER_FILE_PATH = '/sites/asset/Shared Documents/Assets/DataHP/master_data_hp.xlsx';
 // ============================================================
 
 let msalApp = null, currentUser = null;
-let allData = []; // semua data dari SharePoint
+let allData = [];      // semua data dari SharePoint List
 let filteredData = []; // data setelah filter
+let masterDB = [];     // data master dari file SP (semua area & device)
 let activeTab = 0;
 
 function initMsal() {
@@ -320,7 +324,7 @@ async function afterLogin() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('user-name-display').textContent = currentUser.name || currentUser.username;
   document.getElementById('main-page').classList.add('show');
-  await loadAllData();
+  await Promise.all([loadMasterData(), loadAllData()]);
 }
 
 async function doLogout() {
@@ -348,6 +352,66 @@ window.addEventListener('DOMContentLoaded', async () => {
     afterLogin();
   }
 });
+
+async function loadMasterData() {
+  try {
+    const token = await getToken();
+    const encodedPath = encodeURIComponent(MASTER_FILE_PATH);
+    const apiUrl = `${SP_SITE}/_api/web/GetFileByServerRelativeUrl('${encodedPath}')/$value`;
+    const res = await fetch(apiUrl, {
+      headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/octet-stream' }
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const ab = await res.arrayBuffer();
+    const wb = XLSX.read(ab, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+    masterDB = rows.map((r, i) => ({
+      id: i + 1,
+      no_inv: r['NO_INVENTARIS'] || '',
+      imei:   r['IMEI'] || '',
+      sim:    String(r['SIM_CARD'] || ''),
+      slsno:  r['SLSNO'] || '',
+      region: r['REGION'] || '',
+      entity: r['ENTITY'] || '',
+      branch: r['BRANCH'] || '',
+      area:   String(r['AREA'] || '').toUpperCase(),
+    })).filter(r => r.area);
+    toast(`✅ Master: ${masterDB.length} device, ${[...new Set(masterDB.map(d=>d.area))].length} area`);
+  } catch(e) {
+    toast('Gagal muat master data: ' + e.message, 'err');
+  }
+}
+
+async function loadMasterDB() {
+  try {
+    const token = await getToken();
+    const encodedPath = encodeURIComponent(MASTER_FILE_PATH);
+    const apiUrl = `${SP_SITE}/_api/web/GetFileByServerRelativeUrl('${encodedPath}')/$value`;
+    const res = await fetch(apiUrl, {
+      headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/octet-stream' }
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const arrayBuffer = await res.arrayBuffer();
+    const wb = XLSX.read(arrayBuffer, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+    masterDB = rows.map((r, i) => ({
+      id: i + 1,
+      no_inv: r['NO_INVENTARIS'] || '',
+      imei:   r['IMEI'] || '',
+      sim:    String(r['SIM_CARD'] || ''),
+      slsno:  r['SLSNO'] || '',
+      region: r['REGION'] || '',
+      entity: r['ENTITY'] || '',
+      branch: r['BRANCH'] || '',
+      area:   String(r['AREA'] || '').toUpperCase(),
+    })).filter(r => r.area);
+    toast(`📂 ${masterDB.length} device master dimuat`);
+  } catch(e) {
+    toast('Gagal muat master: ' + e.message, 'err');
+  }
+}
 
 async function loadAllData() {
   showLoading('Memuat data dari SharePoint...');
@@ -450,26 +514,55 @@ function resetFilter() {
 }
 
 function renderDashboard() {
-  // Stats
-  const areas = [...new Set(filteredData.map(d=>d.AREA).filter(Boolean))];
+  // ── Master-based stats (area & device dari file master SP) ──
+  // Filter master sesuai filter aktif jika ada
+  const fRegion = document.getElementById('f-region').value;
+  const fEntity = document.getElementById('f-entity').value;
+  const fBranch = document.getElementById('f-branch').value;
+  const fArea   = document.getElementById('f-area').value;
+
+  const masterFiltered = masterDB.filter(d => {
+    if (fRegion && d.region !== fRegion) return false;
+    if (fEntity && d.entity !== fEntity) return false;
+    if (fBranch && d.branch !== fBranch) return false;
+    if (fArea   && d.area   !== fArea)   return false;
+    return true;
+  });
+
+  const masterAreas      = [...new Set(masterFiltered.map(d => d.area))];
+  const totalAreaMaster  = masterAreas.length;
+  const totalDeviceMaster = masterFiltered.length;
+
+  // ── SP List-based stats ──
   const submittedAreas = [...new Set(filteredData.filter(d=>d.SUBMIT_STATUS==='SUBMITTED'||d.SUBMIT_STATUS==='REVISED').map(d=>d.AREA))];
   const revisedAreas   = [...new Set(filteredData.filter(d=>d.SUBMIT_STATUS==='REVISED').map(d=>d.AREA))];
-  const totalAda       = filteredData.filter(d=>d.STATUS==='ADA').length;
-  const totalTidak     = filteredData.filter(d=>d.STATUS==='TIDAK ADA').length;
-  const totalBelum     = filteredData.filter(d=>d.STATUS==='BELUM DICEK').length;
-  const totalNew       = filteredData.filter(d=>d.TIPE==='NEW DATA').length;
-  const belumSubmit    = areas.filter(a=>!submittedAreas.includes(a));
+  const belumSubmit    = masterAreas.filter(a => !submittedAreas.includes(a));
 
-  document.getElementById('s-total-area').textContent = areas.length;
-  document.getElementById('s-submit').textContent     = submittedAreas.length;
-  document.getElementById('s-submit-pct').textContent = areas.length ? Math.round(submittedAreas.length/areas.length*100)+'% dari total' : '—';
-  document.getElementById('s-belum').textContent      = belumSubmit.length;
-  document.getElementById('s-revised').textContent    = revisedAreas.length;
-  document.getElementById('s-tidak').textContent      = totalTidak;
-  document.getElementById('sum-ada').textContent      = totalAda;
-  document.getElementById('sum-tidak').textContent    = totalTidak;
-  document.getElementById('sum-belum').textContent    = totalBelum;
-  document.getElementById('sum-new').textContent      = totalNew;
+  // Device submitted = semua device di SP List yang TIPE=TERDAFTAR (bukan new data)
+  const deviceSubmitted   = filteredData.filter(d => d.TIPE === 'TERDAFTAR').length;
+  const belumDicekDevice  = totalDeviceMaster - deviceSubmitted;
+
+  // Ringkasan status unit
+  const totalAda   = filteredData.filter(d=>d.STATUS==='ADA').length;
+  const totalTidak = filteredData.filter(d=>d.STATUS==='TIDAK ADA').length;
+  const totalBelum = filteredData.filter(d=>d.STATUS==='BELUM DICEK').length;
+  const totalNew   = filteredData.filter(d=>d.TIPE==='NEW DATA').length;
+
+  // ── Update stat cards atas (AREA) ──
+  document.getElementById('s-total-area').textContent    = totalAreaMaster || '—';
+  document.getElementById('s-total-area-sub').textContent = masterDB.length ? 'dari master' : 'master belum dimuat';
+  document.getElementById('s-total-device').textContent  = totalDeviceMaster || '—';
+  document.getElementById('s-submit').textContent        = submittedAreas.length;
+  document.getElementById('s-submit-pct').textContent    = totalAreaMaster ? Math.round(submittedAreas.length/totalAreaMaster*100)+'% dari total' : '—';
+  document.getElementById('s-belum').textContent         = belumSubmit.length;
+  document.getElementById('s-revised').textContent       = revisedAreas.length;
+
+  // ── Update ringkasan status device (bawah) ──
+  document.getElementById('sum-total-dev').textContent = totalDeviceMaster || '—';
+  document.getElementById('sum-ada').textContent       = totalAda;
+  document.getElementById('sum-tidak').textContent     = totalTidak;
+  document.getElementById('sum-belum').textContent     = Math.max(0, belumDicekDevice);
+  document.getElementById('sum-new').textContent       = totalNew;
 
   // Area Progress
   const progEl = document.getElementById('area-progress-list');
@@ -502,8 +595,9 @@ function renderDashboard() {
   if (!belumSubmit.length) { belumEl.innerHTML = '<div class="empty-state">Semua area sudah submit ✅</div>'; }
   else {
     belumEl.innerHTML = belumSubmit.map(a => {
-      const emails = [...new Set(filteredData.filter(d=>d.AREA===a&&d.EMAIL_USER).map(d=>d.EMAIL_USER))];
-      return `<div class="belum-row"><div><div class="belum-area">⚠️ ${a}</div><div class="belum-email">${emails[0]||'—'}</div></div><span class="belum-badge">Belum</span></div>`;
+      // cari jumlah device di area ini dari master
+      const devCount = masterFiltered.filter(d => d.area === a).length;
+      return `<div class="belum-row"><div><div class="belum-area">⚠️ ${a}</div><div class="belum-email">${devCount} device terdaftar</div></div><span class="belum-badge">Belum Submit</span></div>`;
     }).join('');
   }
 
