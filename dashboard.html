@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Admin - Verifikasi Aset HP</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.7.1/lib/msal-browser.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Inter',sans-serif;background:#f0f2f5;color:#1e293b;min-height:100vh;}
+
+.login-screen{position:fixed;inset:0;background:#f0f2f5;display:flex;align-items:center;justify-content:center;z-index:999;}
+.login-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:48px 40px;text-align:center;max-width:400px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.08);}
+.login-logo{width:64px;height:64px;background:#1e3a5f;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 20px;}
+.login-card h1{font-size:20px;font-weight:800;color:#1e3a5f;margin-bottom:8px;}
+.login-card p{font-size:13px;color:#94a3b8;margin-bottom:24px;line-height:1.6;}
+.btn-ms-login{width:100%;height:48px;background:#1e3a5f;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all 0.2s;}
+.btn-ms-login:hover{background:#162d4a;}
+.access-denied{background:#fee2e2;border:1px solid #fca5a5;border-radius:10px;padding:16px;font-size:13px;color:#dc2626;margin-top:16px;display:none;}
+
+.loading-overlay{position:fixed;inset:0;background:rgba(240,242,245,0.9);display:none;align-items:center;justify-content:center;z-index:500;flex-direction:column;gap:14px;}
+.loading-overlay.show{display:flex;}
+.spinner{width:40px;height:40px;border:3px solid #e2e8f0;border-top-color:#0ea5e9;border-radius:50%;animation:spin 0.8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:14px;color:#475569;font-weight:500;}
+
+.header{background:#1e3a5f;padding:0 28px;display:flex;align-items:center;gap:14px;height:60px;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,0.2);}
+.header-logo{width:34px;height:34px;background:#0ea5e9;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.header-title{font-size:15px;font-weight:700;color:#fff;}
+.header-sub{font-size:11px;color:rgba(255,255,255,0.5);}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px;}
+.badge-admin{background:#f59e0b;color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.user-name{font-size:12px;color:rgba(255,255,255,0.8);}
+.btn-back{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:4px 12px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;}
+.btn-back:hover{background:rgba(255,255,255,0.2);}
+.btn-logout{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;}
+
+.page{max-width:1400px;margin:0 auto;padding:24px;display:none;}
+.page.show{display:block;}
+
+.tabs{display:flex;gap:4px;margin-bottom:20px;background:#fff;padding:6px;border-radius:10px;border:1px solid #e2e8f0;width:fit-content;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+.tab{padding:8px 20px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:#64748b;transition:all 0.15s;font-family:inherit;}
+.tab.active{background:#1e3a5f;color:#fff;}
+
+/* FILTER BAR */
+.filter-bar{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 20px;margin-bottom:20px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#64748b;}
+.fg select{height:34px;padding:0 28px 0 10px;border:1.5px solid #e2e8f0;border-radius:6px;font-family:inherit;font-size:13px;color:#1e293b;background:#fff;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;min-width:140px;}
+.fg select:focus{outline:none;border-color:#0ea5e9;}
+.btn-reset-f{height:34px;padding:0 14px;background:#f1f5f9;color:#64748b;border:1.5px solid #e2e8f0;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-export-main{height:34px;padding:0 14px;background:#166534;color:#fff;border:none;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;margin-left:auto;}
+.btn-export-main:hover{background:#15803d;}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.stat-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+.stat-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.si-blue{background:#dbeafe;}.si-green{background:#dcfce7;}.si-orange{background:#fef3c7;}.si-red{background:#fee2e2;}.si-purple{background:#ede9fe;}
+.stat-label{font-size:11px;color:#94a3b8;font-weight:500;margin-bottom:2px;}
+.stat-val{font-size:24px;font-weight:800;}
+.stat-sub{font-size:10px;color:#94a3b8;margin-top:1px;}
+.sv-blue{color:#0ea5e9;}.sv-green{color:#16a34a;}.sv-orange{color:#d97706;}.sv-red{color:#dc2626;}.sv-purple{color:#7c3aed;}
+
+.two-col{display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:20px;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px;}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.sec-title{font-size:13px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:8px;}
+.btn-exp-sm{height:28px;padding:0 10px;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:6px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer;}
+
+/* AREA ROWS */
+.area-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f1f5f9;}
+.area-row:last-child{border-bottom:none;}
+.area-name{font-size:12px;font-weight:700;min-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.prog-wrap{flex:1;background:#f1f5f9;border-radius:4px;height:7px;overflow:hidden;}
+.pf{height:100%;border-radius:4px;}
+.pf-green{background:linear-gradient(90deg,#22c55e,#16a34a);}
+.pf-orange{background:linear-gradient(90deg,#f59e0b,#d97706);}
+.pf-empty{background:#e2e8f0;}
+.prog-pct{font-size:11px;font-weight:700;min-width:32px;text-align:right;}
+
+/* PILLS */
+.sp{padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap;}
+.sp-green{background:#dcfce7;color:#16a34a;}
+.sp-orange{background:#fef3c7;color:#d97706;}
+.sp-red{background:#fee2e2;color:#dc2626;}
+.sp-purple{background:#ede9fe;color:#7c3aed;}
+.sp-gray{background:#f1f5f9;color:#64748b;}
+
+/* BELUM SUBMIT */
+.belum-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f1f5f9;}
+.belum-row:last-child{border-bottom:none;}
+.belum-area{font-size:13px;font-weight:700;color:#dc2626;flex:1;}
+.belum-email{font-size:11px;color:#94a3b8;}
+.belum-badge{font-size:11px;font-weight:700;color:#dc2626;background:#fee2e2;padding:2px 8px;border-radius:20px;white-space:nowrap;}
+
+/* USER ACTIVITY */
+.act-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f1f5f9;}
+.act-row:last-child{border-bottom:none;}
+.act-av{width:30px;height:30px;border-radius:50%;background:#0ea5e9;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;}
+.act-email{font-size:12px;font-weight:600;}
+.act-detail{font-size:11px;color:#94a3b8;}
+.act-time{font-size:10px;color:#94a3b8;text-align:right;white-space:nowrap;}
+
+/* SUMMARY */
+.sum-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.sum-box{text-align:center;padding:14px;border-radius:8px;}
+.sum-val{font-size:26px;font-weight:800;}
+.sum-label{font-size:11px;font-weight:600;margin-top:2px;}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead tr{background:#f8fafc;border-bottom:2px solid #e2e8f0;}
+th{padding:9px 12px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#94a3b8;white-space:nowrap;}
+tbody tr{border-bottom:1px solid #f1f5f9;}
+tbody tr:hover{background:#f8fafc;}
+td{padding:9px 12px;vertical-align:middle;}
+.mono{font-family:monospace;font-size:11px;color:#475569;}
+
+/* USER STATUS TABLE */
+.us-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9;align-items:center;}
+.us-grid:last-child{border-bottom:none;}
+.us-head{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#94a3b8;padding:8px 0;border-bottom:2px solid #e2e8f0;margin-bottom:4px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:10px;}
+
+.toasts{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:8px;}
+.toast{background:#1e293b;color:#fff;padding:11px 16px;border-radius:8px;font-size:13px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,0.2);border-left:4px solid #0ea5e9;animation:tIn 0.3s ease;max-width:340px;}
+.toast.err{border-left-color:#dc2626;}
+@keyframes tIn{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+.empty-state{padding:40px;text-align:center;color:#94a3b8;font-size:13px;}
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">📊</div>
+    <h1>Dashboard Admin</h1>
+    <p>Halaman ini hanya untuk administrator.<br>Login dengan akun admin Microsoft 365.</p>
+    <button class="btn-ms-login" onclick="doLogin()">
+      <svg width="20" height="20" viewBox="0 0 21 21" fill="none"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+      Login dengan Microsoft 365
+    </button>
+    <div class="access-denied" id="access-denied">⛔ Akses ditolak. Halaman ini hanya untuk administrator.</div>
+  </div>
+</div>
+
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Memuat data...</div>
+</div>
+
+<div class="header">
+  <div class="header-logo">📊</div>
+  <div>
+    <div class="header-title">Dashboard Admin — Verifikasi Aset HP</div>
+    <div class="header-sub">Asset Management · MS Distribution</div>
+  </div>
+  <div class="header-right">
+    <span class="badge-admin">👑 ADMIN</span>
+    <span class="user-name" id="user-name-display"></span>
+    <button class="btn-back" onclick="window.location.href='form-asset-hp.html'">← Kembali ke Form</button>
+    <button class="btn-logout" onclick="doLogout()">Logout</button>
+  </div>
+</div>
+
+<div class="page" id="main-page">
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab(0)">📊 Dashboard</button>
+    <button class="tab" onclick="showTab(1)">📋 Semua Data</button>
+    <button class="tab" onclick="showTab(2)">👥 Status User</button>
+  </div>
+
+  <!-- FILTER BAR (shared) -->
+  <div class="filter-bar">
+    <div class="fg"><label>Region</label>
+      <select id="f-region" onchange="onFilterChange('region')"><option value="">Semua Region</option></select>
+    </div>
+    <div class="fg"><label>Entity</label>
+      <select id="f-entity" onchange="onFilterChange('entity')"><option value="">Semua Entity</option></select>
+    </div>
+    <div class="fg"><label>Branch</label>
+      <select id="f-branch" onchange="onFilterChange('branch')"><option value="">Semua Branch</option></select>
+    </div>
+    <div class="fg"><label>Area</label>
+      <select id="f-area" onchange="onFilterChange('area')"><option value="">Semua Area</option></select>
+    </div>
+    <div class="fg"><label>Status</label>
+      <select id="f-status" onchange="onFilterChange('status')">
+        <option value="">Semua Status</option>
+        <option value="SUBMITTED">SUBMITTED</option>
+        <option value="REVISED">REVISED</option>
+        <option value="BELUM">BELUM SUBMIT</option>
+      </select>
+    </div>
+    <button class="btn-reset-f" onclick="resetFilter()">↩ Reset</button>
+    <button class="btn-export-main" onclick="exportExcel()">📊 Export Excel</button>
+  </div>
+
+  <!-- TAB 0: DASHBOARD -->
+  <div id="tab-0">
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon si-blue">📋</div><div><div class="stat-label">Total Area</div><div class="stat-val sv-blue" id="s-total-area">—</div><div class="stat-sub">area terdaftar</div></div></div>
+      <div class="stat-card"><div class="stat-icon si-green">✅</div><div><div class="stat-label">Sudah Submit</div><div class="stat-val sv-green" id="s-submit">—</div><div class="stat-sub" id="s-submit-pct">—</div></div></div>
+      <div class="stat-card"><div class="stat-icon si-orange">⏳</div><div><div class="stat-label">Belum Submit</div><div class="stat-val sv-orange" id="s-belum">—</div><div class="stat-sub">perlu follow up</div></div></div>
+      <div class="stat-card"><div class="stat-icon si-purple">✏️</div><div><div class="stat-label">Direvisi</div><div class="stat-val sv-purple" id="s-revised">—</div><div class="stat-sub">dari total submit</div></div></div>
+      <div class="stat-card"><div class="stat-icon si-red">❌</div><div><div class="stat-label">Total Tidak Ada</div><div class="stat-val sv-red" id="s-tidak">—</div><div class="stat-sub">unit HP tidak ada</div></div></div>
+    </div>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-head">
+          <div class="sec-title">📍 Progress per Area</div>
+          <button class="btn-exp-sm" onclick="exportExcel()">📊 Export</button>
+        </div>
+        <div id="area-progress-list"><div class="empty-state">Memuat data...</div></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div class="sec-title">⚠️ Belum Submit</div>
+          <span id="belum-cnt" style="font-size:11px;color:#dc2626;font-weight:700;background:#fee2e2;padding:2px 8px;border-radius:20px">0 area</span>
+        </div>
+        <div id="belum-list"><div class="empty-state">Semua area sudah submit ✅</div></div>
+      </div>
+    </div>
+
+    <div class="three-col">
+      <div class="card" style="grid-column:span 2">
+        <div class="card-head"><div class="sec-title">📊 Ringkasan Status Aset</div></div>
+        <div class="sum-grid">
+          <div class="sum-box" style="background:#dcfce7"><div class="sum-val" style="color:#16a34a" id="sum-ada">—</div><div class="sum-label" style="color:#16a34a">Total ADA ✅</div></div>
+          <div class="sum-box" style="background:#fee2e2"><div class="sum-val" style="color:#dc2626" id="sum-tidak">—</div><div class="sum-label" style="color:#dc2626">Total TIDAK ADA ❌</div></div>
+          <div class="sum-box" style="background:#fef3c7"><div class="sum-val" style="color:#d97706" id="sum-belum">—</div><div class="sum-label" style="color:#d97706">Belum Dicek ⏳</div></div>
+          <div class="sum-box" style="background:#fee2e2"><div class="sum-val" style="color:#dc2626" id="sum-new">—</div><div class="sum-label" style="color:#dc2626">New Data ⚠️</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div class="sec-title">🕐 Aktivitas Terbaru</div></div>
+        <div id="activity-list"><div class="empty-state">Memuat...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 1: SEMUA DATA -->
+  <div id="tab-1" style="display:none">
+    <div class="card">
+      <div style="margin-bottom:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input type="text" id="tbl-search" placeholder="🔍 Cari No. Inventaris / IMEI / SLS No..." oninput="renderDataTable()"
+          style="height:32px;padding:0 10px;border:1.5px solid #e2e8f0;border-radius:6px;font-family:inherit;font-size:12px;min-width:280px;">
+        <span id="tbl-count" style="font-size:12px;color:#94a3b8;margin-left:auto;"></span>
+      </div>
+      <div class="tbl-wrap" id="data-table-wrap">
+        <div class="empty-state">Memuat data...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: STATUS USER -->
+  <div id="tab-2" style="display:none">
+    <div class="card">
+      <div class="card-head">
+        <div class="sec-title">👥 Status Submit per User</div>
+        <button class="btn-exp-sm" onclick="exportUserStatus()" style="height:30px;padding:0 12px;font-size:12px">📊 Export</button>
+      </div>
+      <div class="us-head">
+        <div>Email User</div><div>Area</div><div>Status</div><div>Waktu Submit</div><div>Waktu Revisi</div>
+      </div>
+      <div id="user-status-list"><div class="empty-state">Memuat data...</div></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+// ============================================================
+const CLIENT_ID   = '7d2d5c72-02c0-48ed-a1d2-26a3113f8efb';
+const TENANT_ID   = 'ca373342-64ee-46d7-95e8-cc81024e9682';
+const SP_SITE     = 'https://cimoryindonesia.sharepoint.com/sites/asset';
+const SP_LIST     = 'VerifikasiAsetHP';
+const SCOPES      = ['https://cimoryindonesia.sharepoint.com/AllSites.Write'];
+const ADMIN_EMAIL = 'arvan.aryanto@cimory.com';
+// ============================================================
+
+let msalApp = null, currentUser = null;
+let allData = []; // semua data dari SharePoint
+let filteredData = []; // data setelah filter
+let activeTab = 0;
+
+function initMsal() {
+  if (msalApp) return;
+  msalApp = new msal.PublicClientApplication({
+    auth: { clientId: CLIENT_ID, authority: `https://login.microsoftonline.com/${TENANT_ID}`, redirectUri: window.location.origin + window.location.pathname },
+    cache: { cacheLocation: 'sessionStorage' }
+  });
+}
+
+async function doLogin() {
+  try {
+    initMsal();
+    await msalApp.initialize();
+    const res = await msalApp.loginPopup({ scopes: SCOPES });
+    currentUser = res.account;
+    if (currentUser.username.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+      document.getElementById('access-denied').style.display = 'block';
+      msalApp.logoutPopup();
+      return;
+    }
+    afterLogin();
+  } catch(e) { toast('Login gagal: ' + e.message, 'err'); }
+}
+
+async function afterLogin() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('user-name-display').textContent = currentUser.name || currentUser.username;
+  document.getElementById('main-page').classList.add('show');
+  await loadAllData();
+}
+
+async function doLogout() {
+  if (msalApp) msalApp.logoutPopup();
+  location.reload();
+}
+
+async function getToken() {
+  initMsal(); await msalApp.initialize();
+  const accounts = msalApp.getAllAccounts();
+  try {
+    if (accounts.length > 0) {
+      const res = await msalApp.acquireTokenSilent({ scopes: SCOPES, account: accounts[0] });
+      return res.accessToken;
+    }
+  } catch(e) {}
+  return (await msalApp.acquireTokenPopup({ scopes: SCOPES })).accessToken;
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  initMsal(); await msalApp.initialize();
+  const accounts = msalApp.getAllAccounts();
+  if (accounts.length > 0 && accounts[0].username.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+    currentUser = accounts[0];
+    afterLogin();
+  }
+});
+
+async function loadAllData() {
+  showLoading('Memuat data dari SharePoint...');
+  try {
+    const token = await getToken();
+    let items = [], skip = 0;
+    while (true) {
+      const url = `${SP_SITE}/_api/web/lists/getbytitle('${SP_LIST}')/items?$select=*&$top=500&$skip=${skip}`;
+      const res = await fetch(url, { headers: { 'Accept': 'application/json;odata=verbose', 'Authorization': `Bearer ${token}` } });
+      if (!res.ok) break;
+      const data = await res.json();
+      const batch = data.d.results;
+      items = items.concat(batch);
+      if (batch.length < 500) break;
+      skip += 500;
+    }
+    allData = items;
+    populateFilterOptions();
+    applyFilter();
+    toast(`✅ ${allData.length} record dimuat`);
+  } catch(e) {
+    toast('Gagal muat data: ' + e.message, 'err');
+  } finally { hideLoading(); }
+}
+
+function populateFilterOptions() {
+  const regions  = [...new Set(allData.map(d=>d.REGION||'').filter(Boolean))].sort();
+  const entities = [...new Set(allData.map(d=>d.ENTITY||'').filter(Boolean))].sort();
+  const branches = [...new Set(allData.map(d=>d.BRANCH||'').filter(Boolean))].sort();
+  const areas    = [...new Set(allData.map(d=>d.AREA||'').filter(Boolean))].sort();
+
+  fillSelect('f-region', regions, 'Semua Region');
+  fillSelect('f-entity', entities, 'Semua Entity');
+  fillSelect('f-branch', branches, 'Semua Branch');
+  fillSelect('f-area', areas, 'Semua Area');
+}
+
+function fillSelect(id, options, placeholder) {
+  const sel = document.getElementById(id);
+  const cur = sel.value;
+  sel.innerHTML = `<option value="">${placeholder}</option>`;
+  options.forEach(o => { const opt = document.createElement('option'); opt.value = o; opt.textContent = o; sel.appendChild(opt); });
+  if (cur) sel.value = cur;
+}
+
+function onFilterChange(level) {
+  // Cascade filter
+  const region = document.getElementById('f-region').value;
+  const entity = document.getElementById('f-entity').value;
+  const branch = document.getElementById('f-branch').value;
+
+  if (level === 'region') {
+    const sub = allData.filter(d => !region || d.REGION === region);
+    const entities = [...new Set(sub.map(d=>d.ENTITY||'').filter(Boolean))].sort();
+    const branches = [...new Set(sub.map(d=>d.BRANCH||'').filter(Boolean))].sort();
+    const areas    = [...new Set(sub.map(d=>d.AREA||'').filter(Boolean))].sort();
+    fillSelect('f-entity', entities, 'Semua Entity');
+    fillSelect('f-branch', branches, 'Semua Branch');
+    fillSelect('f-area', areas, 'Semua Area');
+  } else if (level === 'entity') {
+    const sub = allData.filter(d => (!region||d.REGION===region) && (!entity||d.ENTITY===entity));
+    const branches = [...new Set(sub.map(d=>d.BRANCH||'').filter(Boolean))].sort();
+    const areas    = [...new Set(sub.map(d=>d.AREA||'').filter(Boolean))].sort();
+    fillSelect('f-branch', branches, 'Semua Branch');
+    fillSelect('f-area', areas, 'Semua Area');
+  } else if (level === 'branch') {
+    const sub = allData.filter(d => (!region||d.REGION===region) && (!entity||d.ENTITY===entity) && (!branch||d.BRANCH===branch));
+    const areas = [...new Set(sub.map(d=>d.AREA||'').filter(Boolean))].sort();
+    fillSelect('f-area', areas, 'Semua Area');
+  }
+  applyFilter();
+}
+
+function applyFilter() {
+  const region = document.getElementById('f-region').value;
+  const entity = document.getElementById('f-entity').value;
+  const branch = document.getElementById('f-branch').value;
+  const area   = document.getElementById('f-area').value;
+  const status = document.getElementById('f-status').value;
+
+  filteredData = allData.filter(d => {
+    if (region && d.REGION !== region) return false;
+    if (entity && d.ENTITY !== entity) return false;
+    if (branch && d.BRANCH !== branch) return false;
+    if (area   && d.AREA   !== area)   return false;
+    if (status === 'SUBMITTED' && d.SUBMIT_STATUS !== 'SUBMITTED') return false;
+    if (status === 'REVISED'   && d.SUBMIT_STATUS !== 'REVISED')   return false;
+    return true;
+  });
+
+  renderDashboard();
+  if (activeTab === 1) renderDataTable();
+  if (activeTab === 2) renderUserStatus();
+}
+
+function resetFilter() {
+  ['f-region','f-entity','f-branch','f-area','f-status'].forEach(id => document.getElementById(id).value = '');
+  populateFilterOptions();
+  applyFilter();
+}
+
+function renderDashboard() {
+  // Stats
+  const areas = [...new Set(filteredData.map(d=>d.AREA).filter(Boolean))];
+  const submittedAreas = [...new Set(filteredData.filter(d=>d.SUBMIT_STATUS==='SUBMITTED'||d.SUBMIT_STATUS==='REVISED').map(d=>d.AREA))];
+  const revisedAreas   = [...new Set(filteredData.filter(d=>d.SUBMIT_STATUS==='REVISED').map(d=>d.AREA))];
+  const totalAda       = filteredData.filter(d=>d.STATUS==='ADA').length;
+  const totalTidak     = filteredData.filter(d=>d.STATUS==='TIDAK ADA').length;
+  const totalBelum     = filteredData.filter(d=>d.STATUS==='BELUM DICEK').length;
+  const totalNew       = filteredData.filter(d=>d.TIPE==='NEW DATA').length;
+  const belumSubmit    = areas.filter(a=>!submittedAreas.includes(a));
+
+  document.getElementById('s-total-area').textContent = areas.length;
+  document.getElementById('s-submit').textContent     = submittedAreas.length;
+  document.getElementById('s-submit-pct').textContent = areas.length ? Math.round(submittedAreas.length/areas.length*100)+'% dari total' : '—';
+  document.getElementById('s-belum').textContent      = belumSubmit.length;
+  document.getElementById('s-revised').textContent    = revisedAreas.length;
+  document.getElementById('s-tidak').textContent      = totalTidak;
+  document.getElementById('sum-ada').textContent      = totalAda;
+  document.getElementById('sum-tidak').textContent    = totalTidak;
+  document.getElementById('sum-belum').textContent    = totalBelum;
+  document.getElementById('sum-new').textContent      = totalNew;
+
+  // Area Progress
+  const progEl = document.getElementById('area-progress-list');
+  if (!areas.length) { progEl.innerHTML = '<div class="empty-state">Tidak ada data</div>'; }
+  else {
+    let html = '';
+    areas.forEach(a => {
+      const aData = filteredData.filter(d=>d.AREA===a);
+      const ada = aData.filter(d=>d.STATUS==='ADA').length;
+      const total = aData.filter(d=>d.TIPE==='TERDAFTAR').length;
+      const pct = total ? Math.round(ada/total*100) : 0;
+      const st = aData[0]?.SUBMIT_STATUS||'BELUM';
+      const pill = st==='SUBMITTED'?'sp-green':st==='REVISED'?'sp-purple':'sp-red';
+      const pillTxt = st==='SUBMITTED'?'SUBMITTED':st==='REVISED'?'REVISED':'BELUM';
+      const pfClass = pct===100?'pf-green':pct>0?'pf-orange':'pf-empty';
+      html += `<div class="area-row">
+        <div class="area-name">${a}</div>
+        <div class="prog-wrap"><div class="pf ${pfClass}" style="width:${pct}%"></div></div>
+        <div class="prog-pct" style="color:${pct===100?'#16a34a':pct>0?'#d97706':'#94a3b8'}">${pct}%</div>
+        <span class="sp ${pill}">${pillTxt}</span>
+        <button class="btn-exp-sm" onclick="exportAreaExcel('${a}')" ${st==='BELUM'?'disabled style="opacity:0.4"':''}>📊</button>
+      </div>`;
+    });
+    progEl.innerHTML = html;
+  }
+
+  // Belum Submit
+  const belumEl = document.getElementById('belum-list');
+  document.getElementById('belum-cnt').textContent = belumSubmit.length + ' area';
+  if (!belumSubmit.length) { belumEl.innerHTML = '<div class="empty-state">Semua area sudah submit ✅</div>'; }
+  else {
+    belumEl.innerHTML = belumSubmit.map(a => {
+      const emails = [...new Set(filteredData.filter(d=>d.AREA===a&&d.EMAIL_USER).map(d=>d.EMAIL_USER))];
+      return `<div class="belum-row"><div><div class="belum-area">⚠️ ${a}</div><div class="belum-email">${emails[0]||'—'}</div></div><span class="belum-badge">Belum</span></div>`;
+    }).join('');
+  }
+
+  // Activity
+  const sorted = [...filteredData].sort((a,b)=>(b.TIMESTAMP||'').localeCompare(a.TIMESTAMP||'')).slice(0,6);
+  const seen = new Set();
+  const uniq = sorted.filter(d=>{const k=d.EMAIL_USER+'_'+d.AREA;if(seen.has(k))return false;seen.add(k);return true;}).slice(0,5);
+  document.getElementById('activity-list').innerHTML = !uniq.length ? '<div class="empty-state">Belum ada aktivitas</div>' :
+    uniq.map(d=>{
+      const init=(d.EMAIL_USER||'?').charAt(0).toUpperCase();
+      const st=d.SUBMIT_STATUS==='REVISED'?'sp-purple':d.SUBMIT_STATUS==='SUBMITTED'?'sp-green':'sp-gray';
+      return `<div class="act-row"><div class="act-av">${init}</div><div style="flex:1"><div class="act-email">${d.EMAIL_USER||'—'}</div><div class="act-detail">${d.AREA} · <span class="sp ${st}">${d.SUBMIT_STATUS||'—'}</span></div></div><div class="act-time">${(d.TIMESTAMP||'').substring(0,8)}</div></div>`;
+    }).join('');
+}
+
+function renderDataTable() {
+  const search = (document.getElementById('tbl-search')?.value||'').toLowerCase();
+  let rows = filteredData;
+  if (search) rows = rows.filter(d => (d.NO_INVENTARIS||'').toLowerCase().includes(search)||(d.IMEI||'').toLowerCase().includes(search)||(d.SLSNO||'').toLowerCase().includes(search));
+  document.getElementById('tbl-count').textContent = `${rows.length} record`;
+  if (!rows.length) { document.getElementById('data-table-wrap').innerHTML='<div class="empty-state">Tidak ada data</div>'; return; }
+  let html = `<table><thead><tr><th>#</th><th>Timestamp</th><th>Area</th><th>Region</th><th>Email User</th><th>No. Inventaris</th><th>IMEI</th><th>SIM Card</th><th>SLS No.</th><th>Status HP</th><th>Submit Status</th><th>Tipe</th><th>Catatan</th></tr></thead><tbody>`;
+  rows.slice(0,500).forEach((d,i)=>{
+    const stPill = d.STATUS==='ADA'?'sp-green':d.STATUS==='TIDAK ADA'?'sp-red':d.STATUS==='NEW DATA'?'sp-orange':'sp-gray';
+    const sbPill = d.SUBMIT_STATUS==='SUBMITTED'?'sp-green':d.SUBMIT_STATUS==='REVISED'?'sp-purple':'sp-gray';
+    html+=`<tr><td>${i+1}</td><td class="mono">${d.TIMESTAMP||'—'}</td><td><b>${d.AREA||'—'}</b></td><td>${d.REGION||'—'}</td><td class="mono">${d.EMAIL_USER||'—'}</td><td class="mono">${d.NO_INVENTARIS||'—'}</td><td class="mono">${d.IMEI||'—'}</td><td class="mono">${d.SIM_CARD||'—'}</td><td><span style="background:#dbeafe;color:#1d4ed8;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700">${d.SLSNO||'—'}</span></td><td><span class="sp ${stPill}">${d.STATUS||'—'}</span></td><td><span class="sp ${sbPill}">${d.SUBMIT_STATUS||'—'}</span></td><td>${d.TIPE||'—'}</td><td>${d.CATATAN||'—'}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  document.getElementById('data-table-wrap').innerHTML = html;
+}
+
+function renderUserStatus() {
+  const seen = new Map();
+  filteredData.forEach(d => {
+    if (!d.EMAIL_USER||!d.AREA) return;
+    const key = d.EMAIL_USER+'_'+d.AREA;
+    if (!seen.has(key) || (d.SUBMIT_STATUS==='REVISED')) seen.set(key, d);
+  });
+  const users = [...seen.values()].sort((a,b)=>(b.TIMESTAMP||'').localeCompare(a.TIMESTAMP||''));
+  if (!users.length) { document.getElementById('user-status-list').innerHTML='<div class="empty-state">Tidak ada data</div>'; return; }
+  document.getElementById('user-status-list').innerHTML = users.map(d=>{
+    const init=(d.EMAIL_USER||'?').charAt(0).toUpperCase();
+    const pill=d.SUBMIT_STATUS==='SUBMITTED'?'sp-green':d.SUBMIT_STATUS==='REVISED'?'sp-purple':'sp-gray';
+    return `<div class="us-grid">
+      <div style="display:flex;align-items:center;gap:8px"><div class="act-av" style="width:28px;height:28px;font-size:11px">${init}</div><span style="font-size:12px;font-weight:600">${d.EMAIL_USER}</span></div>
+      <div style="font-size:12px;font-weight:700">${d.AREA}</div>
+      <span class="sp ${pill}">${d.SUBMIT_STATUS||'—'}</span>
+      <div style="font-size:11px;color:#64748b">${d.TIMESTAMP||'—'}</div>
+      <div style="font-size:11px;color:#64748b">${d.REVISED_AT||'—'}</div>
+    </div>`;
+  }).join('');
+}
+
+function showTab(i) {
+  activeTab = i;
+  document.querySelectorAll('.tab').forEach((t,idx)=>t.classList.toggle('active',idx===i));
+  [0,1,2].forEach(idx=>document.getElementById('tab-'+idx).style.display=idx===i?'block':'none');
+  if (i===1) renderDataTable();
+  if (i===2) renderUserStatus();
+}
+
+function exportExcel() {
+  if (!filteredData.length) { toast('Tidak ada data untuk diexport','err'); return; }
+  const wb = XLSX.utils.book_new();
+  const header = ['Timestamp','Area','Region','Entity','Branch','Email User','Nama HOA','Tanggal','No Inventaris','IMEI','SIM Card','SLS No','Status HP','Submit Status','Tipe','Catatan','Revised At','Revised By'];
+  const rows = filteredData.map(d=>[d.TIMESTAMP,d.AREA,d.REGION,d.ENTITY,d.BRANCH,d.EMAIL_USER,d.NAMA_HOA,d.TANGGAL,d.NO_INVENTARIS,d.IMEI,d.SIM_CARD,d.SLSNO,d.STATUS,d.SUBMIT_STATUS,d.TIPE,d.CATATAN,d.REVISED_AT,d.REVISED_BY]);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([header,...rows]), 'Data Verifikasi');
+  XLSX.writeFile(wb, `Dashboard_VerifikasiAsetHP_${new Date().toLocaleDateString('id-ID').replace(/\//g,'-')}.xlsx`);
+  toast('📊 Export Excel berhasil!');
+}
+
+function exportAreaExcel(area) {
+  const data = filteredData.filter(d=>d.AREA===area);
+  if (!data.length) return;
+  const wb = XLSX.utils.book_new();
+  const header = ['No','No Inventaris','IMEI','SIM Card','SLS No','Status HP','Catatan','Nama HOA','Tanggal','Submit Status'];
+  const rows = data.map((d,i)=>[i+1,d.NO_INVENTARIS,d.IMEI,d.SIM_CARD,d.SLSNO,d.STATUS,d.CATATAN,d.NAMA_HOA,d.TANGGAL,d.SUBMIT_STATUS]);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([header,...rows]), area);
+  XLSX.writeFile(wb, `Verifikasi_${area}.xlsx`);
+  toast(`📊 Export ${area} berhasil!`);
+}
+
+function exportUserStatus() {
+  const seen = new Map();
+  filteredData.forEach(d => { if(!d.EMAIL_USER||!d.AREA)return; const k=d.EMAIL_USER+'_'+d.AREA; if(!seen.has(k)||(d.SUBMIT_STATUS==='REVISED'))seen.set(k,d); });
+  const users = [...seen.values()];
+  const wb = XLSX.utils.book_new();
+  const header = ['Email User','Area','Status','Waktu Submit','Waktu Revisi','Revised By'];
+  const rows = users.map(d=>[d.EMAIL_USER,d.AREA,d.SUBMIT_STATUS,d.TIMESTAMP,d.REVISED_AT,d.REVISED_BY]);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([header,...rows]), 'Status User');
+  XLSX.writeFile(wb, `StatusUser_VerifikasiAsetHP.xlsx`);
+  toast('📊 Export Status User berhasil!');
+}
+
+function showLoading(t='Memuat...'){document.getElementById('loading-text').textContent=t;document.getElementById('loading-overlay').classList.add('show');}
+function hideLoading(){document.getElementById('loading-overlay').classList.remove('show');}
+function toast(msg,type=''){const c=document.getElementById('toasts'),t=document.createElement('div');t.className='toast'+(type?' '+type:'');t.textContent=msg;c.appendChild(t);setTimeout(()=>t.remove(),5000);}
+</script>
+</body>
+</html>
