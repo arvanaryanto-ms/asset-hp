@@ -324,7 +324,7 @@ const TENANT_ID   = 'ca373342-64ee-46d7-95e8-cc81024e9682';
 const SP_SITE     = 'https://cimoryindonesia.sharepoint.com/sites/asset';
 const SP_LIST     = 'VerifikasiAsetHP';
 const SCOPES      = ['https://cimoryindonesia.sharepoint.com/AllSites.Write'];
-const ADMIN_EMAIL = 'arvan.aryanto@cimory.com';
+const ADMIN_EMAILS = ['arvan.aryanto@cimory.com','indra.cahya@cimory.com','ayub.pratama@cimory.com','steven@cimory.com'];
 const MASTER_FILE_PATH = '/sites/asset/Shared Documents/Assets/DataHP/master_data_hp.xlsx';
 // ============================================================
 
@@ -348,7 +348,7 @@ async function doLogin() {
     await msalApp.initialize();
     const res = await msalApp.loginPopup({ scopes: SCOPES });
     currentUser = res.account;
-    if (currentUser.username.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    if (!ADMIN_EMAILS.includes(currentUser.username.toLowerCase())) {
       document.getElementById('access-denied').style.display = 'block';
       msalApp.logoutPopup();
       return;
@@ -384,7 +384,7 @@ async function getToken() {
 window.addEventListener('DOMContentLoaded', async () => {
   initMsal(); await msalApp.initialize();
   const accounts = msalApp.getAllAccounts();
-  if (accounts.length > 0 && accounts[0].username.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+  if (accounts.length > 0 && ADMIN_EMAILS.includes(accounts[0].username.toLowerCase())) {
     currentUser = accounts[0];
     afterLogin();
   }
